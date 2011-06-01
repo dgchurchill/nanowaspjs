@@ -1,3 +1,1 @@
 document.write("Hello, world!");
-
-		
