@@ -474,8 +474,8 @@ break
 
 /* speed tweaks */
 /* #define readbyte readbyte_internal */
-#define readbyte(b) memory[b]
-#define readbyte_internal(b) memory[b]
+//#define readbyte_internal(b) memory[b]
+#define readbyte readbyte_internal
 #define writebyte writebyte_internal
 
 #endif		/* #ifndef FUSE_Z80_MACROS_H */

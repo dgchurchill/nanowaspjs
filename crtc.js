@@ -6,13 +6,16 @@ var nanowasp = nanowasp || {};
 
 nanowasp.Crtc = function () {
     
-    this.reset = function() {
+    this.reset = function () {
         this._selectedRegister = 0;
 
         this._lpenValid = false;
         this._lpen = 0;
         
-        this._frameTime = 0;
+        this._emulationTime = 0;
+        this._lastFrameTime = 0;
+
+        this._frameTime = 1;  // _frameTime is assumed != 0
         this._vblankTime = 0;
         
         this._cursorPosition = 0;
@@ -21,6 +24,7 @@ nanowasp.Crtc = function () {
         this._cursorMode = this.CursorMode.NoBlink;
         this._cursorOn = false;
         this._blinkRate = 0;
+        this._frameCounter = 0;
         
         this._hTotal = 0;
         this._hDisplayed = 0;
@@ -32,6 +36,10 @@ nanowasp.Crtc = function () {
     };
     
     this.reset();
+
+    this.connect = function (keyboard) {
+        this._keyboard = keyboard;
+    };
     
     this.read = function (address) {
         switch (address % this.PortIndex.NumPorts) {
@@ -180,12 +188,38 @@ nanowasp.Crtc = function () {
         }
     };
     
-    this.execute = function(time, duration) {
+    this.execute = function (time, duration) {
+        this._emulationTime = time + duration;  // Time to update up to.
+        var delta = this._emulationTime - this._lastFrameTime;
         
+        if (delta >= this._frameTime) {
+            this._render();  // duration may be longer than one frame(?), so this could skip frames.
+            
+            this._frameCounter += Math.floor(delta / this._frameTime);  // FIXME: This probably drops frames as a result of ignoring the fraction, but it's only used for cursor blinking.
+            this._lastFrameTime = this._emulationTime - delta % this._frameTime;  // The emulated time the frame really finished.
+            
+            if (this._blinkRate > 0 && this._frameCounter > this._blinkRate) {
+                this._cursorOn = !this._cursorOn;  // TODO: Verify this.  Modified during porting because the old code didn't seem to make any sense (if condition would always be true?).
+                this._frameCounter %= this._blinkRate;
+            }
+        }
+        
+        return this._lastFrameTime + this._frameTime - this._emulationTime;
     };
     
-    this._calculateVBlank = function() {
+    this._calculateVBlank = function () {
+        var CHAR_CLOCK_HZ = 1687500; 
         
+        this._frameTime = this._hTotal * (this._vTotal * this._scansPerRow + this._vTotalAdjustment) * 1000000 / CHAR_CLOCK_HZ;
+        this._vblankTime = this._hTotal * ((this._vTotal - this._vDisplayed) * this._scansPerRow + vTotalAdjustment) * 1000000 / CHAR_CLOCK_HZ;
+
+        if (this._frameTime == 0) {
+            this._frameTime = 1;  // _frameTime is assumed != 0
+        }
+    };
+    
+    this._render = function () {
+        throw "Not implemented";
     };
 };
 
