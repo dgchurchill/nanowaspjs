@@ -39,6 +39,10 @@ nanowasp.Crtc.prototype = {
         
         this._memoryAddress = 0;
     },
+    
+    getSize: function () {
+        return this.PortIndex.NumPorts;
+    },
 
     connect: function (keyboard, crtcMemory) {
         this._keyboard = keyboard;
@@ -61,8 +65,9 @@ nanowasp.Crtc.prototype = {
             if (this._lpenValid) {
                 status |= STATUS_LPEN;
             }
-            
-            if (this._microbee.getTime() % this._frameTime < this._vblankTime) {
+
+            // FIXME: Eliminate global
+            if (emulationTime % this._frameTime < this._vblankTime) {
                 status |= STATUS_VBLANK;
             }
             
@@ -93,7 +98,7 @@ nanowasp.Crtc.prototype = {
         }
     },
     
-    write: function (adddress, value) {
+    write: function (address, value) {
         switch (address % this.PortIndex.NumPorts) {
         case this.PortIndex.Address:
             this._selectedRegister = value % this.RegisterIndex.NumRegs;
@@ -220,11 +225,15 @@ nanowasp.Crtc.prototype = {
         this._lpen = address;
     },
     
+    getDisplayStart: function () {
+        return this._displayStart;
+    },
+    
     _calculateVBlank: function () {
         var CHAR_CLOCK_HZ = 1687500; 
         
         this._frameTime = this._hTotal * (this._vTotal * this._scansPerRow + this._vTotalAdjustment) * 1000000 / CHAR_CLOCK_HZ;
-        this._vblankTime = this._hTotal * ((this._vTotal - this._vDisplayed) * this._scansPerRow + vTotalAdjustment) * 1000000 / CHAR_CLOCK_HZ;
+        this._vblankTime = this._hTotal * ((this._vTotal - this._vDisplayed) * this._scansPerRow + this._vTotalAdjustment) * 1000000 / CHAR_CLOCK_HZ;
 
         if (this._frameTime == 0) {
             this._frameTime = 1;  // _frameTime is assumed != 0
@@ -263,6 +272,7 @@ nanowasp.Crtc.prototype = {
             }
             
             y += this._scansPerRow;
+            x = 0;
         }
     },
 

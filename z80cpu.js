@@ -15,11 +15,13 @@ function writebyte_internal(address, value) {
 }
 
 function readport(address) {
+    address &= 0xff;
     var entry = nanowasp.z80cpu._portHandlers[address / nanowasp.z80cpu._portBlockSize | 0];  // (x | 0) coerces x into an integer
     return entry.handler.read(address - entry.base);
 }
 
 function writeport(address, value) {
+    address &= 0xff;
     var entry = nanowasp.z80cpu._portHandlers[address / nanowasp.z80cpu._portBlockSize | 0];  // (x | 0) coerces x into an integer
     entry.handler.write(address - entry.base, value);    
 }

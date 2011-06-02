@@ -21,7 +21,7 @@ nanowasp.LatchRom.prototype = {
         return 1;
     },
     
-    getLatch: function() {
+    isLatched: function() {
         return this._isLatched;
     }
 };

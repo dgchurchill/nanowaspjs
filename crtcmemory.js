@@ -13,6 +13,7 @@ nanowasp.CrtcMemory = function (charRomData, graphicsContext) {
 };
 
 nanowasp.CrtcMemory.prototype = {
+    GRAPHICS_MEMORY_SIZE: 4096,
     VIDEO_RAM_SIZE: 2048,
     PCG_RAM_SIZE: 2048,
     BIT_MA13: 13,
@@ -23,10 +24,14 @@ nanowasp.CrtcMemory.prototype = {
         this._latchRom = latchRom;
     },
     
+    getSize: function () {
+        return this.GRAPHICS_MEMORY_SIZE;
+    },
+    
     read: function (address) {
         if (address < this.VIDEO_RAM_SIZE) {
-            if (this._latchRom.getLatch()) {
-                var baseAddress = utils.getBit(this._crtc.getDispStart(), this.BIT_MA13) * this.VIDEO_RAM_SIZE;
+            if (this._latchRom.isLatched()) {
+                var baseAddress = utils.getBit(this._crtc.getDisplayStart(), this.BIT_MA13) * this.VIDEO_RAM_SIZE;
                 return this._charRom.read(baseAddress + address);
             } else {
                 return this._videoRam.read(address);
@@ -38,7 +43,7 @@ nanowasp.CrtcMemory.prototype = {
     
     write: function (address, value) {
         if (address < this.VIDEO_RAM_SIZE) {
-            if (!this._latchRom.getLatch()) {
+            if (!this._latchRom.isLatched()) {
                 this._videoRam.write(address, value);
             }
         }
@@ -69,13 +74,12 @@ nanowasp.CrtcMemory.prototype = {
         var imageOffset = 0;
         
         for (var row = 0; row < scansPerRow; ++row) {
-            for (var i = 0; i < this.CHAR_WIDTH; ++i) {
-                if (bitmapData[bitmapOffset] & (1 << i) != 0) {
-                    image.data[imageOffset++] = 255;
-                    image.data[imageOffset++] = 255;
-                    image.data[imageOffset++] = 255;
-                    image.data[imageOffset++] = 255;
-                }
+            for (var i = this.CHAR_WIDTH - 1; i >= 0; --i) {
+                var color = ((bitmapData.read(bitmapOffset) & (1 << i)) != 0) ? 255 : 0;
+                image.data[imageOffset++] = color;
+                image.data[imageOffset++] = color;
+                image.data[imageOffset++] = color;
+                image.data[imageOffset++] = 255;
             }
             
             bitmapOffset++;

@@ -14,6 +14,14 @@ nanowasp.MemMapper.prototype = {
         this._roms = roms;
         this._crtcMemory = crtcMemory;
     },
+    
+    reset: function () {
+        this.write(0, 0);
+    },
+    
+    getSize: function () {
+        return 1;
+    },
         
     read: function (address) {
         return 0;  // MemMapper cannot be read.
