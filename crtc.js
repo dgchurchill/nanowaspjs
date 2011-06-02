@@ -4,9 +4,13 @@
 
 var nanowasp = nanowasp || {};
 
-nanowasp.Crtc = function () {
-    
-    this.reset = function () {
+nanowasp.Crtc = function (graphicsContext) {
+    this.reset();
+    this._graphicsContext = graphicsContext;
+};
+
+nanowasp.Crtc.prototype = {
+    reset: function () {
         this._selectedRegister = 0;
 
         this._lpenValid = false;
@@ -26,6 +30,7 @@ nanowasp.Crtc = function () {
         this._blinkRate = 0;
         this._frameCounter = 0;
         
+        this._displayStart = 0;
         this._hTotal = 0;
         this._hDisplayed = 0;
         this._vTotalAdjustment = 0;
@@ -33,15 +38,14 @@ nanowasp.Crtc = function () {
         this._scansPerRow = 0;
         
         this._memoryAddress = 0;
-    };
-    
-    this.reset();
+    },
 
-    this.connect = function (keyboard) {
+    connect: function (keyboard, crtcMemory) {
         this._keyboard = keyboard;
-    };
+        this._crtcMemory = crtcMemory;
+    },
     
-    this.read = function (address) {
+    read: function (address) {
         switch (address % this.PortIndex.NumPorts) {
         case this.PortIndex.Status:
             var STATUS_STROBE = 0x80;
@@ -87,9 +91,9 @@ nanowasp.Crtc = function () {
         default:
             return 0xFF;
         }
-    };
+    },
     
-    this.write = function (adddress, value) {
+    write: function (adddress, value) {
         switch (address % this.PortIndex.NumPorts) {
         case this.PortIndex.Address:
             this._selectedRegister = value % this.RegisterIndex.NumRegs;
@@ -186,9 +190,9 @@ nanowasp.Crtc = function () {
             }
             break;
         }
-    };
+    },
     
-    this.execute = function (time, duration) {
+    execute: function (time, duration) {
         this._emulationTime = time + duration;  // Time to update up to.
         var delta = this._emulationTime - this._lastFrameTime;
         
@@ -205,18 +209,18 @@ nanowasp.Crtc = function () {
         }
         
         return this._lastFrameTime + this._frameTime - this._emulationTime;
-    };
+    },
     
-    this.triggerLpen = function (address) {
+    triggerLpen: function (address) {
         if (this._lpenValid) {
             return;  // Already triggered, ignore new triggers until previous value is read.
         }
         
         this._lpenValid = true;
         this._lpen = address;
-    };
+    },
     
-    this._calculateVBlank = function () {
+    _calculateVBlank: function () {
         var CHAR_CLOCK_HZ = 1687500; 
         
         this._frameTime = this._hTotal * (this._vTotal * this._scansPerRow + this._vTotalAdjustment) * 1000000 / CHAR_CLOCK_HZ;
@@ -225,14 +229,43 @@ nanowasp.Crtc = function () {
         if (this._frameTime == 0) {
             this._frameTime = 1;  // _frameTime is assumed != 0
         }
-    };
+    },
     
-    this._render = function () {
-        throw "Not implemented";
-    };
-};
+    _render: function () {
+        var address = this._displayStart;
+        var x = 0;
+        var y = 0;
+        for (var row = 0; row < this._vDisplayed; ++row) {
+            for (var column = 0; column < this._hDisplayed; ++column) {
+                var characterImage = this._crtcMemory.getCharacterData(address, this._scansPerRow);
+                
+                /* TODO: Implement cursor
+                if (cursor_on && maddr == cur_pos)
+                {
+                    unsigned char cursor_bmp[CRTCMemory::cBitmapSize];
 
-nanowasp.Crtc.prototype = {
+                    for (word k = 0; k < scans_per_row; k++)
+                    {
+                        if ((scans_per_row - k - 1) >= cur_start && (scans_per_row - k - 1) <= cur_end)
+                            cursor_bmp[k] = bmp[k] ^ 0xFF;
+                        else
+                            cursor_bmp[k] = bmp[k];
+                    }
+
+                    bmp = cursor_bmp;
+                }
+                */
+                
+                this._graphicsContext.putImageData(characterImage, x, y);
+                x += nanowasp.CrtcMemory.prototype.CHAR_WIDTH;
+                var CRTC_ADDRESS_SIZE = 16384;
+                address = (address + 1) % CRTC_ADDRESS_SIZE; 
+            }
+            
+            y += this._scansPerRow;
+        }
+    },
+
     RegisterIndex: Object.freeze({
         HTot:        0,
         HDisp:       1,

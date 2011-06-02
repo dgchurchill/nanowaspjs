@@ -59,6 +59,13 @@ nanowasp.Z80Cpu.prototype = {
     MEMORY_SIZE: 65536,
     PORT_SIZE: 256,
     
+    execute: function (time, duration) {
+        tstates = 0;
+        event_next_event = duration * this.FREQUENCY_HZ / 1000000;  // TODO: Should check how many cycles we did last time and adjust this.  See original C++ code.
+        z80_do_opcodes();
+        return 0;  // Execute again as soon as possible.
+    },
+    
     registerMemoryDevice: function (address, handler) {
         var updated = this._registerDevice(address, handler, this.MEMORY_SIZE, this._memoryBlockSize, this._memoryHandlers);
         this._memoryBlockSize = updated.blockSize;
