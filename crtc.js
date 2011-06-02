@@ -207,6 +207,15 @@ nanowasp.Crtc = function () {
         return this._lastFrameTime + this._frameTime - this._emulationTime;
     };
     
+    this.triggerLpen = function (address) {
+        if (this._lpenValid) {
+            return;  // Already triggered, ignore new triggers until previous value is read.
+        }
+        
+        this._lpenValid = true;
+        this._lpen = address;
+    };
+    
     this._calculateVBlank = function () {
         var CHAR_CLOCK_HZ = 1687500; 
         
