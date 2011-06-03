@@ -61,7 +61,12 @@ nanowasp.Z80Cpu.prototype = {
     MEMORY_SIZE: 65536,
     PORT_SIZE: 256,
     
+    reset: function () {
+        z80_reset();
+    },
+    
     execute: function (time, duration) {
+        // FIXME: Check correspondence between tstates and cycles!!
         tstates = 0;
         event_next_event = duration * this.FREQUENCY_HZ / 1000000;  // TODO: Should check how many cycles we did last time and adjust this.  See original C++ code.
         z80_do_opcodes();

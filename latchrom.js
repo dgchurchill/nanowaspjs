@@ -9,6 +9,10 @@ nanowasp.LatchRom = function () {
 };
 
 nanowasp.LatchRom.prototype = {
+    reset: function () {
+        this._isLatched = false;
+    },
+        
     read: function (address) {
         return 0;  // Cannot be read
     },

@@ -44,7 +44,8 @@ nanowasp.Crtc.prototype = {
         return this.PortIndex.NumPorts;
     },
 
-    connect: function (keyboard, crtcMemory) {
+    connect: function (microbee, keyboard, crtcMemory) {
+        this._microbee = microbee;
         this._keyboard = keyboard;
         this._crtcMemory = crtcMemory;
     },
@@ -66,8 +67,7 @@ nanowasp.Crtc.prototype = {
                 status |= STATUS_LPEN;
             }
 
-            // FIXME: Eliminate global
-            if (emulationTime % this._frameTime < this._vblankTime) {
+            if (this._microbee.getTime() % this._frameTime < this._vblankTime) {
                 status |= STATUS_VBLANK;
             }
             

@@ -19,6 +19,12 @@ nanowasp.CrtcMemory.prototype = {
     BIT_MA13: 13,
     CHAR_WIDTH: 8,
         
+    reset: function () {
+        this._charRom.reset();
+        this._pcgRam.reset();
+        this._videoRam.reset();
+    },
+    
     connect: function (crtc, latchRom) {
         this._crtc = crtc;
         this._latchRom = latchRom;

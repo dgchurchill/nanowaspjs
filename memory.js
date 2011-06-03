@@ -9,6 +9,10 @@ nanowasp.Ram = function (size) {
 };
 
 nanowasp.Ram.prototype = {
+    reset: function () {
+        this._memory = new Uint8Array(this.getSize());
+    },
+        
     getSize: function () {
         return this._memory.length;
     },
@@ -28,6 +32,9 @@ nanowasp.Rom = function (data) {
 };
 
 nanowasp.Rom.prototype = {
+    reset: function () {
+    },
+        
     getSize: function () {
         return this._memory.length;
     },

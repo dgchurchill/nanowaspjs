@@ -9,13 +9,16 @@ nanowasp.Keyboard = function (pressedKeys) {
 };
 
 nanowasp.Keyboard.prototype = {
+    KEY_START: 4,
+    KEY_BITS: 6,
+
     connect: function (crtc, latchrom) {
         this._crtc = crtc;
         this._latchrom = latchrom;
     },
-    
-    KEY_START: 4,
-    KEY_BITS: 6,
+
+    reset: function () {
+    },
         
     check: function (crtcAddress) {
         
