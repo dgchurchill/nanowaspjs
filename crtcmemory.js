@@ -81,10 +81,10 @@ nanowasp.CrtcMemory.prototype = {
         
         for (var row = 0; row < scansPerRow; ++row) {
             for (var i = this.CHAR_WIDTH - 1; i >= 0; --i) {
-                var color = ((bitmapData.read(bitmapOffset) & (1 << i)) != 0) ? 255 : 0;
-                image.data[imageOffset++] = color;
-                image.data[imageOffset++] = color;
-                image.data[imageOffset++] = color;
+                var color = ((bitmapData.read(bitmapOffset) & (1 << i)) != 0) ? 1 : 0;
+                image.data[imageOffset++] = 247 * color;
+                image.data[imageOffset++] = 211 * color;
+                image.data[imageOffset++] = 49 * color;
                 image.data[imageOffset++] = 255;
             }
             

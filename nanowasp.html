@@ -1,21 +1,37 @@
 <!DOCTYPE html>
 
 <html>
+
 <head>
 <title>NanoWasp</title>
+
+<style>
+.button {
+    padding: 5px;
+    border-style: solid;
+    border-width: 1px;
+    margin: 5px;
+    font: medium sans-serif;
+}
+
+div {
+    margin: 10px;
+}
+
+</style>
 </head>
 
 <body>
 
 <div>
-	<span id="start_button" style="border-style: solid;">Start</span>
-	<span id="stop_button" style="border-style: solid;">Stop</span>
-	<span id="reset_button" style="border-style: solid;">Reset</span>
+	<span id="start_button" class="button">Start</span>
+	<span id="stop_button" class="button">Stop</span>
+	<span id="reset_button" class="button">Reset</span>
 	<span id="pc"></span>
 </div>
 
 <div>
-    <canvas id="vdu" width="640" height="400" style="border-style: solid; border-width: thin;"></canvas>
+    <canvas id="vdu" width="640" height="400"></canvas>
 </div>
 
 <script src="nanowasp.js"></script>
