@@ -3,10 +3,12 @@ window.onload = function () {
     var pressedKeys = [];
     window.onkeydown = function (event) {
         pressedKeys[event.keyCode] = true;
+        return false;
     };
     
     window.onkeyup = function (event) {
         pressedKeys[event.keyCode] = false;
+        return false;
     };
     
     var graphicsContext = document.getElementById("vdu").getContext('2d');
