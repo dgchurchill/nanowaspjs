@@ -5,11 +5,11 @@
 window.onload = function () {
     var pressedKeys = [];
     window.onkeydown = function (event) {
-        pressedKeys[event.keycode] = true;
+        pressedKeys[event.keyCode] = true;
     };
     
     window.onkeyup = function (event) {
-        pressedKeys[event.keycode] = false;
+        pressedKeys[event.keyCode] = false;
     };
     
     var graphicsContext = document.getElementById("vdu").getContext('2d');
