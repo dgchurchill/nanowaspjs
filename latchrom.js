@@ -13,6 +13,10 @@ nanowasp.LatchRom.prototype = {
         this._isLatched = false;
     },
         
+    restoreState: function (state) {
+        this._isLatched = state.readBool();
+    },
+    
     read: function (address) {
         return 0;  // Cannot be read
     },

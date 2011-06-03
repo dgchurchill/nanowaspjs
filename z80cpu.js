@@ -65,6 +65,42 @@ nanowasp.Z80Cpu.prototype = {
         z80_reset();
     },
     
+    restoreState: function(state) {
+        z80.f = state.readByte();
+        z80.a = state.readByte();
+        z80.c = state.readByte();
+        z80.b = state.readByte();
+        z80.e = state.readByte();
+        z80.d = state.readByte();
+        z80.l = state.readByte();
+        z80.h = state.readByte();
+        z80.ixl = state.readByte();
+        z80.ixh = state.readByte();
+        z80.iyl = state.readByte();
+        z80.iyh = state.readByte();
+        z80.sp = state.readWord();
+        
+        z80.f_ = state.readByte();
+        z80.a_ = state.readByte();
+        z80.c_ = state.readByte();
+        z80.b_ = state.readByte();
+        z80.e_ = state.readByte();
+        z80.d_ = state.readByte();
+        z80.l_ = state.readByte();
+        z80.h_ = state.readByte();
+        
+        state.readWord();  // For some reason the Z80 emulator used by the C++ code stores alternate copies of IX, IY and SP.
+        state.readWord();
+        state.readWord();
+
+        z80.pc = state.readWord();
+        z80.r = state.readByte();
+        z80.i = state.readByte();
+        z80.iff1 = state.readByte();
+        z80.iff2 = state.readByte();
+        z80.im = state.readByte();
+    },
+    
     execute: function (time, duration) {
         tstates = 0;
         event_next_event = duration * this.FREQUENCY_HZ / 1000000;  // TODO: Should check how many cycles we did last time and adjust this.  See original C++ code.

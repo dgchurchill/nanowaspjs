@@ -19,6 +19,10 @@ nanowasp.MemMapper.prototype = {
         this.write(0, 0);
     },
     
+    restoreState: function (state) {
+        this.write(0, state.readByte());
+    },
+    
     getSize: function () {
         return 1;
     },

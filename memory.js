@@ -16,6 +16,10 @@ nanowasp.Ram.prototype = {
     getSize: function () {
         return this._memory.length;
     },
+    
+    restoreState: function (state) {
+        this._memory = state.readBuffer(this.getSize());
+    },
         
 	read: function (address) {
 		return this._memory[address];

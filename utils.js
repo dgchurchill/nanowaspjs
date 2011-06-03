@@ -80,3 +80,34 @@ var utils = {
         return result;
     }
 };
+
+utils.BinaryReader = function(array) {
+    this._array = array;
+    this._offset = 0;
+};
+
+utils.BinaryReader.prototype = {
+    readByte: function () {
+        var result = this._array[this._offset];
+        this._offset++;
+        return result;
+    },
+    
+    readWord: function () {
+        return this.readByte() | (this.readByte() << 8);
+    },
+    
+    readBool: function () {
+        return this.readByte() != 0;
+    },
+    
+    readBuffer: function(length) {
+        var buffer = new Uint8Array(length);
+        for (var i = 0; i < length; ++i) {
+            buffer[i] = this.readByte();
+        }
+        
+        return buffer;
+    }
+};
+

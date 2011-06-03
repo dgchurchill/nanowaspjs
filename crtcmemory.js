@@ -25,6 +25,11 @@ nanowasp.CrtcMemory.prototype = {
         this._videoRam.reset();
     },
     
+    restoreState: function (state) {
+        this._videoRam.restoreState(state);
+        this._pcgRam.restoreState(state);  // TODO: The PCG RAM in the saved state has each characters rows reversed as on optimisation for OpenGL.  Either adjust it here or fix the save state code in C++ to unmangle the order.
+    },
+    
     connect: function (crtc, latchRom) {
         this._crtc = crtc;
         this._latchRom = latchRom;

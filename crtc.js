@@ -40,6 +40,33 @@ nanowasp.Crtc.prototype = {
         this._memoryAddress = 0;
     },
     
+    restoreState: function (state) {
+        this._selectedRegister = state.readByte();
+        
+        this._memoryAddress = state.readWord();
+        
+        this._displayStart = state.readWord();
+        
+        this._hTotal = state.readWord();
+        this._hDisplayed = state.readWord();
+        this._vTotal = state.readWord();
+        this._vTotalAdjustment = state.readWord();
+        this._vDisplayed = state.readWord();
+        this._scansPerRow = state.readWord();
+        
+        this._cursorStart = state.readWord();
+        this._cursorEnd = state.readWord();
+        this._cursorMode = state.readWord();
+        this._cursorPosition = state.readWord();
+        this._cursorOn = state.readBool();
+        this._blinkRate = state.readWord();
+        
+        this._lpen = state.readWord();
+        this._lpenValid = state.readBool();
+        
+        this._calculateVBlank();
+    },
+    
     getSize: function () {
         return this.PortIndex.NumPorts;
     },

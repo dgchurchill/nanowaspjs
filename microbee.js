@@ -10,47 +10,43 @@ nanowasp.MicroBee = function (graphicsContext, pressedKeys) {
     this._sliceDoneCallback = null;
     
     // Create the devices
+    this._devices = {};
     nanowasp.z80cpu = new nanowasp.Z80Cpu();  // TODO: Code in z80cpu relies on the Z80Cpu instance being available here.  Need to eliminate the globals from the z80 emulation code so this restriction can be removed.
-    var keyboard = new nanowasp.Keyboard(pressedKeys);
-    var latchrom = new nanowasp.LatchRom();
-    var crtc = new nanowasp.Crtc(graphicsContext);
-    var memMapper = new nanowasp.MemMapper();
-    var roms = [
-                new nanowasp.Rom(utils.decodeBase64(nanowasp.data.bios)),
-                new nanowasp.Rom(new Uint8Array(16384)),
-                new nanowasp.Rom(new Uint8Array(16384))
-            ];
-    var rams = [
-                new nanowasp.Ram(32768),
-                new nanowasp.Ram(32768),
-                new nanowasp.Ram(32768),
-                new nanowasp.Ram(32768)
-            ];
-    var charRomData = utils.decodeBase64(nanowasp.data.charRom);
-    var crtcMemory = new nanowasp.CrtcMemory(charRomData, graphicsContext);
-    
+    this._devices.z80 = nanowasp.z80cpu;
+    this._devices.keyboard = new nanowasp.Keyboard(pressedKeys);
+    this._devices.latchrom = new nanowasp.LatchRom();
+    this._devices.crtc = new nanowasp.Crtc(graphicsContext);
+    this._devices.memMapper = new nanowasp.MemMapper();
+    this._devices.rom1 = new nanowasp.Rom(utils.decodeBase64(nanowasp.data.bios));
+    this._devices.rom2 = new nanowasp.Rom(new Uint8Array(16384));
+    this._devices.rom3 = new nanowasp.Rom(new Uint8Array(16384));
+    this._devices.ram0 = new nanowasp.Ram(32768);
+    this._devices.ram1 = new nanowasp.Ram(32768);
+    this._devices.ram2 = new nanowasp.Ram(32768);
+    this._devices.ram3 = new nanowasp.Ram(32768);
+    this._devices.crtcMemory = new nanowasp.CrtcMemory(utils.decodeBase64(nanowasp.data.charRom), graphicsContext);
+
+    this._runnables = [this._devices.z80, this._devices.crtc];
+
     // Connect the devices
-    keyboard.connect(crtc, latchrom);
-    crtc.connect(this, keyboard, crtcMemory);
-    memMapper.connect(nanowasp.z80cpu, rams, roms, crtcMemory);
-    crtcMemory.connect(crtc, latchrom);
+    var roms = [ this._devices.rom1, this._devices.rom2, this._devices.rom3 ];
+    var rams = [ this._devices.ram0, this._devices.ram1, this._devices.ram2, this._devices.ram3 ];
+    this._devices.memMapper.connect(this._devices.z80, rams, roms, this._devices.crtcMemory);
+    this._devices.keyboard.connect(this._devices.crtc, this._devices.latchrom);
+    this._devices.crtc.connect(this, this._devices.keyboard, this._devices.crtcMemory);
+    this._devices.crtcMemory.connect(this._devices.crtc, this._devices.latchrom);
     
     // Register the ports
-    nanowasp.z80cpu.registerPortDevice(0x0b, latchrom);
+    nanowasp.z80cpu.registerPortDevice(0x0b, this._devices.latchrom);
     
-    nanowasp.z80cpu.registerPortDevice(0x0c, crtc);
-    nanowasp.z80cpu.registerPortDevice(0x0e, crtc);
-    nanowasp.z80cpu.registerPortDevice(0x1c, crtc);
-    nanowasp.z80cpu.registerPortDevice(0x1e, crtc);
+    nanowasp.z80cpu.registerPortDevice(0x0c, this._devices.crtc);
+    nanowasp.z80cpu.registerPortDevice(0x0e, this._devices.crtc);
+    nanowasp.z80cpu.registerPortDevice(0x1c, this._devices.crtc);
+    nanowasp.z80cpu.registerPortDevice(0x1e, this._devices.crtc);
     
     for (var i = 0x50; i <= 0x57; ++i) {
-        nanowasp.z80cpu.registerPortDevice(i, memMapper);
+        nanowasp.z80cpu.registerPortDevice(i, this._devices.memMapper);
     }
-
-    // Build device arrays
-    this._runnables = [nanowasp.z80cpu, crtc];
-    this._devices = [nanowasp.z80cpu, crtc, keyboard, latchrom, memMapper, crtcMemory];
-    this._devices = this._devices.concat(roms, rams);
     
     // Reset everything to get ready to start
     this.reset();
@@ -74,6 +70,13 @@ nanowasp.MicroBee.prototype = {
         this._microsToRun = this.MAX_MICROS_TO_RUN;
     },
 
+    restoreState: function (state) {
+        for (var key in state) {
+            var reader = new utils.BinaryReader(utils.decodeBase64(state[key]));
+            this._devices[key].restoreState(reader);
+        }
+    },
+    
     setSliceDoneCallback: function (cb) {
         this._sliceDoneCallback = cb;
     },

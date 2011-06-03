@@ -14,6 +14,7 @@ window.onload = function () {
     var graphicsContext = document.getElementById("vdu").getContext('2d');
     
     var microbee = new nanowasp.MicroBee(graphicsContext, pressedKeys);
+    microbee.restoreState(nanowasp.data.island);
             
     var pc_span = document.getElementById("pc");
 
