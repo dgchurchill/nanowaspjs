@@ -8,8 +8,12 @@ nanowasp.CrtcMemory = function (charRomData, graphicsContext) {
     this._charRom = new nanowasp.Rom(charRomData);
     this._pcgRam = new nanowasp.Ram(this.PCG_RAM_SIZE);
     this._videoRam = new nanowasp.Ram(this.VIDEO_RAM_SIZE);
-    
+
     this._graphicsContext = graphicsContext;
+    
+    this._pcgImages = {};
+    this._charRomImages = {};
+    this._buildAllCharacters(this._charRomImages, this._charRom);
 };
 
 nanowasp.CrtcMemory.prototype = {
@@ -18,6 +22,9 @@ nanowasp.CrtcMemory.prototype = {
     PCG_RAM_SIZE: 2048,
     BIT_MA13: 13,
     CHAR_WIDTH: 8,
+    MAX_CHAR_HEIGHT: 16,
+    FOREGROUND_COLOR: [247, 211, 49, 255],  // TODO: Transparent monitor?
+    BACKGROUND_COLOR: [0, 0, 0, 255],
         
     reset: function () {
         this._charRom.reset();
@@ -27,7 +34,8 @@ nanowasp.CrtcMemory.prototype = {
     
     restoreState: function (state) {
         this._videoRam.restoreState(state);
-        this._pcgRam.restoreState(state);  // TODO: The PCG RAM in the saved state has each characters rows reversed as on optimisation for OpenGL.  Either adjust it here or fix the save state code in C++ to unmangle the order.
+        this._pcgRam.restoreState(state);
+        this._buildAllCharacters(this._pcgImages, this._pcgRam);
     },
     
     connect: function (crtc, latchRom) {
@@ -59,7 +67,11 @@ nanowasp.CrtcMemory.prototype = {
             }
         }
         else {
-            this._pcgRam.write((address - this.VIDEO_RAM_SIZE) % this.PCG_RAM_SIZE, value);
+            var pcgAddress = (address - this.VIDEO_RAM_SIZE) % this.PCG_RAM_SIZE;
+            this._pcgRam.write(pcgAddress, value);
+            var character = pcgAddress / this.MAX_CHAR_HEIGHT | 0;
+            var row = pcgAddress % this.MAX_CHAR_HEIGHT;
+            this._buildCharacterRow(this._pcgImages, character, value, row);
         }
     },
    
@@ -67,35 +79,45 @@ nanowasp.CrtcMemory.prototype = {
         var BIT_PCG = 7;
         var INDEX_START = 0;
         var INDEX_COUNT = 7;
-        var BITMAP_SIZE = 16;  // Bytes per character image
         
-        // TODO: Cache the image data for each character.  Probably cache the entire character (i.e. for max value of scansPerRow - 16?) and use 'dirty' parameters to putImageData. 
-
         var b = this._videoRam.read(crtcAddress % this.VIDEO_RAM_SIZE);
-        var bitmapOffset = utils.getBits(b, INDEX_START, INDEX_COUNT) * BITMAP_SIZE;
-        var bitmapData = this._charRom;
+        var character = utils.getBits(b, INDEX_START, INDEX_COUNT);
+        var imageCache = this._charRomImages;
         if (utils.getBit(b, BIT_PCG) == 1) {
-            bitmapData = this._pcgRam;
+            imageCache = this._pcgImages;
         } else {
             // Select character ROM bank
-            bitmapOffset += utils.getBit(crtcAddress, this.BIT_MA13) * this.VIDEO_RAM_SIZE;
+            character += utils.getBit(crtcAddress, this.BIT_MA13) * this.VIDEO_RAM_SIZE / this.MAX_CHAR_HEIGHT;
         }
         
-        var image = this._graphicsContext.createImageData(this.CHAR_WIDTH, scansPerRow);
-        var imageOffset = 0;
+        return imageCache[character];
+    },
+    
+    _buildAllCharacters: function (cache, memory) {
+        for (var i = 0; i < memory.getSize() / this.MAX_CHAR_HEIGHT; ++i) {
+            this._buildCharacter(cache, i, memory, i * this.MAX_CHAR_HEIGHT);
+        }
+    },
+    
+    _buildCharacter: function (cache, character, memory, offset) {
+        for (var i = 0; i < this.MAX_CHAR_HEIGHT; ++i) {
+            this._buildCharacterRow(cache, character, memory.read(offset + i), i);
+        }
+    },
+    
+    _buildCharacterRow: function (cache, character, data, row) {
+        var image = cache[character];
+        if (image == undefined) {
+            image = this._graphicsContext.createImageData(this.CHAR_WIDTH, this.MAX_CHAR_HEIGHT);
+            cache[character] = image;
+        }
         
-        for (var row = 0; row < scansPerRow; ++row) {
-            for (var i = this.CHAR_WIDTH - 1; i >= 0; --i) {
-                var color = ((bitmapData.read(bitmapOffset) & (1 << i)) != 0) ? 1 : 0;
-                image.data[imageOffset++] = 247 * color;
-                image.data[imageOffset++] = 211 * color;
-                image.data[imageOffset++] = 49 * color;
-                image.data[imageOffset++] = 255;
+        var imageOffset = row * this.CHAR_WIDTH * 4;
+        for (var i = this.CHAR_WIDTH - 1; i >= 0; --i) {
+            var color = ((data & (1 << i)) != 0) ? this.FOREGROUND_COLOR : this.BACKGROUND_COLOR;
+            for (var j = 0; j < color.length; ++j) {
+                image.data[imageOffset++] = color[j];
             }
-            
-            bitmapOffset++;
         }
-        
-        return image;
     }
 };
