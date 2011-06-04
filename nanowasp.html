@@ -6,16 +6,19 @@
 <title>NanoWasp</title>
 
 <style>
+
+body {
+    background: url("images/microbee.jpg") no-repeat top center;
+    margin: 0;
+}
+
 .button {
+    background: white;
     padding: 5px;
     border-style: solid;
     border-width: 1px;
     margin: 5px;
     font: medium sans-serif;
-}
-
-div {
-    margin: 10px;
 }
 
 </style>
@@ -30,8 +33,10 @@ div {
 	<span id="pc"></span>
 </div>
 
-<div>
-    <canvas id="vdu" width="640" height="400"></canvas>
+<div style="width:100%; position: absolute; top: 150px;">
+    <div style="width:640px; margin: 0 auto;">
+        <canvas id="vdu" width="640" height="400" style="width: 640px; height: 450px;"></canvas>
+    </div>
 </div>
 
 <script src="nanowasp.js"></script>

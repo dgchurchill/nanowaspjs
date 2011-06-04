@@ -33,6 +33,7 @@ nanowasp.Crtc.prototype = {
         this._displayStart = 0;
         this._hTotal = 0;
         this._hDisplayed = 0;
+        this._vTotal = 0;
         this._vTotalAdjustment = 0;
         this._vDisplayed = 0;
         this._scansPerRow = 0;
@@ -258,10 +259,13 @@ nanowasp.Crtc.prototype = {
     
     _calculateVBlank: function () {
         var CHAR_CLOCK_HZ = 1687500; 
+
+        this._graphicsContext.canvas.width = this._hDisplayed * nanowasp.CrtcMemory.prototype.CHAR_WIDTH;
+        this._graphicsContext.canvas.height = this._vDisplayed * this._scansPerRow;
         
         this._frameTime = this._hTotal * (this._vTotal * this._scansPerRow + this._vTotalAdjustment) * 1000000 / CHAR_CLOCK_HZ;
         this._vblankTime = this._hTotal * ((this._vTotal - this._vDisplayed) * this._scansPerRow + this._vTotalAdjustment) * 1000000 / CHAR_CLOCK_HZ;
-
+        
         if (this._frameTime == 0) {
             this._frameTime = 1;  // _frameTime is assumed != 0
         }
@@ -297,7 +301,7 @@ nanowasp.Crtc.prototype = {
                 }
                 */
                 
-                this._graphicsContext.putImageData(characterImage, x, y);
+                this._graphicsContext.putImageData(characterImage, x, y);  // FIXME: Only write _scansPerRow rows!
                 x += nanowasp.CrtcMemory.prototype.CHAR_WIDTH;
                 var CRTC_ADDRESS_SIZE = 16384;
                 address = (address + 1) % CRTC_ADDRESS_SIZE; 
