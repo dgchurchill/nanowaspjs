@@ -15,12 +15,6 @@ window.onload = function () {
     
     var microbee = new nanowasp.MicroBee(graphicsContext, pressedKeys);
     microbee.restoreState(nanowasp.data.island);
-            
-    var pc_span = document.getElementById("pc");
-
-    microbee.setSliceDoneCallback(function () {
-        pc_span.textContent = z80.pc.toString() + " - " + readbyte_internal(z80.pc); 
-    });
 
     document.getElementById("start_button").onclick = microbee.start.bind(microbee); 
     document.getElementById("stop_button").onclick = microbee.stop.bind(microbee); 
