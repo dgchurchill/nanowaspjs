@@ -5,12 +5,16 @@ window.onload = function () {
         pressedKeys[event.keyCode] = true;
         return false;
     };
-    
+
+    window.onkeypress = function (event) {
+        return false;
+    };
+
     window.onkeyup = function (event) {
         pressedKeys[event.keyCode] = false;
         return false;
     };
-    
+
     var graphicsContext = document.getElementById("vdu").getContext('2d');
     
     var microbee = new nanowasp.MicroBee(graphicsContext, pressedKeys);
