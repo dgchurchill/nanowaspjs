@@ -1,3 +1,4 @@
 # data.js contains ROMs, saved state, etc
 data.js
-
+snapshots
+.DS_Store
