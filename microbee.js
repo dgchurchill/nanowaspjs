@@ -124,5 +124,9 @@ nanowasp.MicroBee.prototype = {
     
     stop: function () {
         this._isRunning = false;
+    },
+    
+    getIsRunning: function () {
+        return this._isRunning;
     }
 };

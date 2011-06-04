@@ -18,9 +18,10 @@ window.onload = function () {
     var graphicsContext = document.getElementById("vdu").getContext('2d');
     
     var microbee = new nanowasp.MicroBee(graphicsContext, pressedKeys);
-    microbee.restoreState(nanowasp.data.island);
 
-    document.getElementById("start_button").onclick = microbee.start.bind(microbee); 
-    document.getElementById("stop_button").onclick = microbee.stop.bind(microbee); 
-    document.getElementById("reset_button").onclick = microbee.reset.bind(microbee); 
+    window.onblur = microbee.stop.bind(microbee);
+    window.onfocus = microbee.start.bind(microbee);
+
+    microbee.restoreState(nanowasp.data.basic);
+    microbee.start();
 };
