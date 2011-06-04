@@ -282,26 +282,14 @@ nanowasp.Crtc.prototype = {
         var y = 0;
         for (var row = 0; row < this._vDisplayed; ++row) {
             for (var column = 0; column < this._hDisplayed; ++column) {
-                var characterImage = this._crtcMemory.getCharacterData(address, this._scansPerRow);
-                
-                /* TODO: Implement cursor
-                if (cursor_on && maddr == cur_pos)
-                {
-                    unsigned char cursor_bmp[CRTCMemory::cBitmapSize];
-
-                    for (word k = 0; k < scans_per_row; k++)
-                    {
-                        if ((scans_per_row - k - 1) >= cur_start && (scans_per_row - k - 1) <= cur_end)
-                            cursor_bmp[k] = bmp[k] ^ 0xFF;
-                        else
-                            cursor_bmp[k] = bmp[k];
-                    }
-
-                    bmp = cursor_bmp;
+                var cursor = null;
+                if (this._cursorOn && address == this._cursorPosition) {
+                    cursor = [this._cursorStart, this._cursorEnd];
                 }
-                */
+
+                var characterImage = this._crtcMemory.getCharacterData(address, this._scansPerRow, cursor);
                 
-                this._graphicsContext.putImageData(characterImage, x, y);  // FIXME: Only write _scansPerRow rows!
+                this._graphicsContext.putImageData(characterImage, x, y);  // TODO: Should probably only write _scansPerRow rows, but the next row will cover it up.  For the final row the excess scan lines will be off the canvas.
                 x += nanowasp.CrtcMemory.prototype.CHAR_WIDTH;
                 var CRTC_ADDRESS_SIZE = 16384;
                 address = (address + 1) % CRTC_ADDRESS_SIZE; 

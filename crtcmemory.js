@@ -72,45 +72,58 @@ nanowasp.CrtcMemory.prototype = {
             this._pcgRam.write(pcgAddress, value);
             var character = pcgAddress / this.MAX_CHAR_HEIGHT | 0;
             var row = pcgAddress % this.MAX_CHAR_HEIGHT;
-            this._buildCharacterRow(this._pcgImages, character, value, row);
+            this._pcgImages[character] = this._buildCharacterRow(this._pcgImages[character], value, row);
         }
     },
    
-    getCharacterData: function (crtcAddress, scansPerRow) {
+    getCharacterData: function (crtcAddress, scansPerRow, cursor) {
         var BIT_PCG = 7;
         var INDEX_START = 0;
         var INDEX_COUNT = 7;
         
         var b = this._videoRam.read(crtcAddress % this.VIDEO_RAM_SIZE);
         var character = utils.getBits(b, INDEX_START, INDEX_COUNT);
-        var imageCache = this._charRomImages;
-        if (utils.getBit(b, BIT_PCG) == 1) {
-            imageCache = this._pcgImages;
-        } else {
+        var isPcg = utils.getBit(b, BIT_PCG) == 1;
+        
+        if (!isPcg) {
             // Select character ROM bank
             character += utils.getBit(crtcAddress, this.BIT_MA13) * this.VIDEO_RAM_SIZE / this.MAX_CHAR_HEIGHT;
         }
         
-        return imageCache[character];
+        if (cursor == null || cursor == undefined) {
+            var imageCache = isPcg ? this._pcgImages : this._charRomImages;
+            return imageCache[character];
+        } else {
+            var memory = isPcg ? this._pcgRam : this._charRom;
+            return this._buildCharacter(null, memory, character * this.MAX_CHAR_HEIGHT, cursor);
+        }
     },
     
     _buildAllCharacters: function (cache, memory) {
         for (var i = 0; i < memory.getSize() / this.MAX_CHAR_HEIGHT; ++i) {
-            this._buildCharacter(cache, i, memory, i * this.MAX_CHAR_HEIGHT);
+            cache[i] = this._buildCharacter(cache[i], memory, i * this.MAX_CHAR_HEIGHT);
         }
     },
     
-    _buildCharacter: function (cache, character, memory, offset) {
+    _buildCharacter: function (image, memory, offset, cursor) {
+        var haveCursor = cursor != null && cursor != undefined;
+        
         for (var i = 0; i < this.MAX_CHAR_HEIGHT; ++i) {
-            this._buildCharacterRow(cache, character, memory.read(offset + i), i);
+            var data = memory.read(offset + i);
+            
+            if (haveCursor && i >= cursor[0] && i <= cursor[1]) {
+                data ^= 0xff;
+            }
+            
+            image = this._buildCharacterRow(image, data, i);
         }
+        
+        return image;
     },
     
-    _buildCharacterRow: function (cache, character, data, row) {
-        var image = cache[character];
-        if (image == undefined) {
+    _buildCharacterRow: function (image, data, row) {
+        if (image == null || image == undefined) {
             image = this._graphicsContext.createImageData(this.CHAR_WIDTH, this.MAX_CHAR_HEIGHT);
-            cache[character] = image;
         }
         
         var imageOffset = row * this.CHAR_WIDTH * 4;
@@ -120,5 +133,7 @@ nanowasp.CrtcMemory.prototype = {
                 image.data[imageOffset++] = color[j];
             }
         }
+        
+        return image;
     }
 };

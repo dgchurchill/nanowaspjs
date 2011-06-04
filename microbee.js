@@ -66,7 +66,7 @@ nanowasp.MicroBee.prototype = {
         //       is reset it will indicate a frame time of 1us.  If the initial slice executes enough code
         //       to initialise the CRTC then everything is OK.  If we start running slices of only 1us
         //       duration then everything slows to a crawl.  TODO: Fix this properly (e.g. ensure CRTC never
-        //       returns to small an interval; or, implement a MIN_MICROS_TO_RUN).
+        //       returns too small an interval; or, implement a MIN_MICROS_TO_RUN).
         this._microsToRun = this.MAX_MICROS_TO_RUN;
     },
 
