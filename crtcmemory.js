@@ -25,7 +25,8 @@ nanowasp.CrtcMemory.prototype = {
     MAX_CHAR_HEIGHT: 16,
     FOREGROUND_COLOR: [247, 211, 49, 255],  // TODO: Transparent monitor?
     BACKGROUND_COLOR: [0, 0, 0, 255],
-        
+    BACKGROUND_COLOR_CSS: "rgb(0, 0, 0)",
+
     reset: function () {
         this._charRom.reset();
         this._pcgRam.reset();

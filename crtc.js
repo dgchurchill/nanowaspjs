@@ -270,7 +270,7 @@ nanowasp.Crtc.prototype = {
     _render: function () {
         // TODO: Only render changes.
         
-        this._graphicsContext.fillStyle = "black";
+        this._graphicsContext.fillStyle = nanowasp.CrtcMemory.prototype.BACKGROUND_COLOR_CSS;
         this._graphicsContext.fillRect(0, 0, this._graphicsContext.canvas.width, this._graphicsContext.canvas.height);
         
         var address = this._displayStart;
