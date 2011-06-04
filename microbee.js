@@ -5,7 +5,7 @@
 var nanowasp = nanowasp || {};
 
 nanowasp.MicroBee = function (graphicsContext, pressedKeys) {
-    this._intervalId = null;
+    this._isRunning = false;
     this._runSlice = this._runSliceBody.bind(this);
     this._sliceDoneCallback = null;
     
@@ -95,10 +95,16 @@ nanowasp.MicroBee.prototype = {
         this._emulationTime += this._microsToRun;
         this._microsToRun = nextMicros;
 
-        // TODO: Speed limiting to run at original clock speed.
-        
         if (this._sliceDoneCallback != null) {
             this._sliceDoneCallback();
+        }
+
+        if (this._isRunning) {
+            var elapsedRealTimeMs = (new Date()).getTime() - this._startRealTime;
+            var elapsedEmulationTimeMs = (this._emulationTime - this._startEmulationTime) / 1000;
+            var delay = elapsedEmulationTimeMs - elapsedRealTimeMs;
+            delay = Math.max(0, delay);
+            window.setTimeout(this._runSlice, delay);
         }
     },
     
@@ -108,15 +114,15 @@ nanowasp.MicroBee.prototype = {
     },
     
     start: function () {
-        if (this._intervalId == null) {
-            this._intervalId = window.setInterval(this._runSlice, 1);  // TODO: Different scheduling mechanism?  See docs for window.postMessage.
+        if (!this._isRunning) {
+            this._isRunning = true;
+            this._startRealTime = (new Date()).getTime();
+            this._startEmulationTime = this._emulationTime;
+            this._runSlice();
         }
     },
     
     stop: function () {
-        if (this._intervalId != null) {
-            window.clearInterval(this._intervalId);
-            this._intervalId = null;
-        }
+        this._isRunning = false;
     }
 };
