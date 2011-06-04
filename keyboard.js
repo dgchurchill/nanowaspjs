@@ -94,10 +94,10 @@ nanowasp.Keyboard.prototype = {
         27,    // Escape
         8,     // Backspace
         9,     // Tab
-        -1,    // LF  TODO: Map this
+        34,    // (PgDn) LF
         13,    // Enter
         20,    // Capslock
-        -1,    // Break  TODO: Map this
+        35,    // (End) Break
         32,    // Space
         -1,    // Extra key 61  TODO: Map this?
         17,    // Control
