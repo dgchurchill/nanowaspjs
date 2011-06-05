@@ -21,7 +21,7 @@ window.onload = function () {
     var usedKeys = {};
     var keyMap = nanowasp.Keyboard.prototype.keyMap;
     for (var i = 0; i < keyMap.length; ++i) {
-        usedKeys[i] = true;
+        usedKeys[keyMap[i]] = true;
     }
     
     var ignoreKey = function (event) {
