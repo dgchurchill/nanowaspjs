@@ -53,7 +53,8 @@ window.onload = function () {
 
     var graphicsContext = document.getElementById("vdu").getContext('2d');
     
-    var microbee = new nanowasp.MicroBee(graphicsContext, pressedKeys);
+    // microbee variable is global to make debugging easier.
+    microbee = new nanowasp.MicroBee(graphicsContext, pressedKeys);
 
     window.onblur = microbee.stop.bind(microbee);
     window.onfocus = microbee.start.bind(microbee);
