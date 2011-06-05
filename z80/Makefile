@@ -21,10 +21,10 @@
 all: z80_ops_full.js z80_full.js
 
 z80_ops_full.js: z80_ops.jscpp z80_macros.jscpp opcodes_base.jscpp z80_cb.jscpp z80_ddfd.jscpp z80_ddfdcb.jscpp z80_ed.jscpp
-	cpp -P z80_ops.jscpp z80_ops_full.js
+	cpp -P -C z80_ops.jscpp z80_ops_full.js
 
 z80_full.js: z80.jscpp z80_macros.jscpp opcodes_base.jscpp z80_cb.jscpp z80_ddfd.jscpp z80_ddfdcb.jscpp z80_ed.jscpp
-	cpp -P z80.jscpp z80_full.js
+	cpp -P -C z80.jscpp z80_full.js
 
 opcodes_base.jscpp: z80.pl opcodes_base.dat
 	perl z80.pl opcodes_base.dat > opcodes_base.jscpp

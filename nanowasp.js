@@ -1,4 +1,4 @@
-/*  NanoWasp - A MicroBee emulator
+/*!  NanoWasp - A MicroBee emulator
  *  Copyright (C) 2007, 2011 David G. Churchill
  *
  *  This file is part of NanoWasp.
