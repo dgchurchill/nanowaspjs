@@ -40,6 +40,6 @@ window.onload = function () {
     window.onblur = microbee.stop.bind(microbee);
     window.onfocus = microbee.start.bind(microbee);
 
-    microbee.restoreState(nanowasp.data.basic);
+    microbee.restoreState(nanowasp.data.island);
     microbee.start();
 };
