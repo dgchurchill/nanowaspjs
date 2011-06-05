@@ -37,7 +37,7 @@ nanowasp.Keyboard.prototype = {
         
     check: function (crtcAddress) {
         
-        var keyCode = this._keyMap[utils.getBits(crtcAddress, this.KEY_START, this.KEY_BITS)];
+        var keyCode = this.keyMap[utils.getBits(crtcAddress, this.KEY_START, this.KEY_BITS)];
         if (this._pressedKeys[keyCode]) {
             this._crtc.triggerLpen(crtcAddress);
         }
@@ -49,15 +49,15 @@ nanowasp.Keyboard.prototype = {
         }
         
         // Scan in reverse order because higher addressed keys supplant lower addressed keys.
-        for (var i = this._keyMap.length - 1; i >= 0; --i) {
-            if (this._pressedKeys[this._keyMap[i]]) {
+        for (var i = this.keyMap.length - 1; i >= 0; --i) {
+            if (this._pressedKeys[this.keyMap[i]]) {
                 this._crtc.triggerLpen(i << this.KEY_START);
                 break;
             }
         }
     },
     
-    _keyMap: [
+    keyMap: [
         222,   // '
         65,    // A
         66,

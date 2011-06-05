@@ -18,17 +18,35 @@
  */
 
 window.onload = function () {
+    var usedKeys = {};
+    var keyMap = nanowasp.Keyboard.prototype.keyMap;
+    for (var i = 0; i < keyMap.length; ++i) {
+        usedKeys[i] = true;
+    }
+    
+    var ignoreKey = function (event) {
+        return event.metaKey || !(event.keyCode in usedKeys);
+    };
+    
     var pressedKeys = [];
     window.onkeydown = function (event) {
+        if (ignoreKey(event)) {
+            return true;
+        }
+
         pressedKeys[event.keyCode] = true;
         return false;
     };
 
     window.onkeypress = function (event) {
-        return false;
+        return ignoreKey(event);
     };
 
     window.onkeyup = function (event) {
+        if (ignoreKey(event)) {
+            return true;
+        }
+
         pressedKeys[event.keyCode] = false;
         return false;
     };
