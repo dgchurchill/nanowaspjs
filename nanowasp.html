@@ -20,10 +20,12 @@ html, body {
 
 body {
     background: rgb(238, 206, 158);
+    font-family: 'Inconsolata', helvetica, sans-serif;
 }
 
 #about_link {
-    font: bold 50px 'Inconsolata', helvetica, sans-serif;
+    font-weight: bold;
+    font-size: 50px;
     color: #a8a8a8;
     text-decoration: none;
     padding: 10px;
@@ -49,7 +51,11 @@ body {
 	    <img src="monitor.jpg" width="1070" height="905" style="display: block;" />
 	    <div style="width: 100%; position: absolute; top: 150px;">
 	        <div style="width:640px; margin: 0 auto;">
-	            <canvas id="vdu" width="640" height="400" style="width: 640px; height: 450px;"></canvas>
+	           <div id="error_message" style="display: none; position: relative; z-index: 1; background-color: rgb(238, 206, 158); padding: 10px;">
+	               Unfortunately your browser does not support some features required by NanoWasp.  Try
+	               using the latest version of <a href="http://www.google.com/chrome">Chrome</a>.
+	           </div>
+	           <canvas id="vdu" width="640" height="400" style="width: 640px; height: 450px;"></canvas>
 	        </div>
 	    </div>
 	</div>

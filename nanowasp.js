@@ -17,7 +17,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-window.onload = function () {
+var nanowasp = nanowasp || {};
+
+nanowasp.main = function () {
     var usedKeys = {};
     var keyMap = nanowasp.Keyboard.prototype.keyMap;
     for (var i = 0; i < keyMap.length; ++i) {
@@ -61,4 +63,26 @@ window.onload = function () {
 
     microbee.restoreState(nanowasp.data.island);
     microbee.start();
+};
+
+window.onload = function () {
+    // The intention is that this is the first piece of code that actually does anything serious.
+    // Up until this point in execution only definitions of functions and simple objects should
+    // have been made.  That is, nothing should have been done that would fail in browsers 
+    // released in the last few years.
+    //
+    // The following try/catch should pick up any issues we have that will arise due to missing
+    // features as all the features we require are used during the nanowasp.main() call.
+    // TODO: It may be a good idea to put a similar try/catch around MicroBee._runSliceBody.
+    
+    try {
+        nanowasp.main();
+    } catch (e) {
+        if (console && console.log) {
+            console.log(e);
+        }
+        
+        // Hopefully at least this will work...
+        document.getElementById("error_message").style.display = "block";
+    }
 };

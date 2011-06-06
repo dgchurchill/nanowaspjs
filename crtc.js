@@ -315,7 +315,7 @@ nanowasp.Crtc.prototype = {
         }
     },
 
-    RegisterIndex: Object.freeze({
+    RegisterIndex: {
         HTot:        0,
         HDisp:       1,
         HSyncPos:    2,
@@ -339,19 +339,26 @@ nanowasp.Crtc.prototype = {
         
         DoSetAddr:   31,
         NumRegs:     32
-    }),
+    },
     
-    PortIndex: Object.freeze({
+    PortIndex: {
         Address:  0,
         Status:   0,
         Data:     1,
         NumPorts: 2
-    }),
+    },
     
-    CursorMode: Object.freeze({
+    CursorMode: {
         NoBlink:  0,
         NoCursor: 1,
         Blink16:  2,
         Blink32:  3
-    })
+    }
 };
+
+if (Object.freeze != undefined) {
+    var p = nanowasp.Crtc.prototype;
+    Object.freeze(p.RegisterIndex);
+    Object.freeze(p.PortIndex);
+    Object.freeze(p.CursorMode);
+}
