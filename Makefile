@@ -1,25 +1,46 @@
 
-YUI=java -jar tools/yuicompressor-2.4.6.jar
+TYPE=debug
+
+ifeq ($(TYPE),release)
+OUTPUTDIR=release
+YUI=java -jar tools/yuicompressor-2.4.6.jar --type js
+else
+OUTPUTDIR=debug
+YUI=cat
+endif
 
 NANOWASP_JS=nanowasp.js crtc.js crtcmemory.js data.js keyboard.js latchrom.js memmapper.js memory.js microbee.js utils.js z80cpu.js
 Z80_JS=z80/z80_full.js z80/z80_ops_full.js
-CONTENT=nanowasp.html about.html images/dave.jpg images/monitor.jpg htaccess
+IMAGES=$(OUTPUTDIR)/dave.jpg $(OUTPUTDIR)/monitor.jpg
 
-all: nanowasp
 
-nanowasp: nanowasp_js z80_js $(CONTENT)
-	cp $(CONTENT) build
-	mv build/htaccess build/.htaccess
-	mv build/nanowasp.html build/index.html
+.PHONY: nanowasp
+nanowasp: $(OUTPUTDIR)/nanowasp.js $(OUTPUTDIR)/z80.js $(OUTPUTDIR)/index.html $(OUTPUTDIR)/about.html $(IMAGES)
 
-nanowasp_js: $(NANOWASP_JS)
-	mkdir -p build
-	cat $(NANOWASP_JS) | $(YUI) --type js > build/nanowasp.js
-	gzip -c build/nanowasp.js > build/nanowasp.js.gz
+$(OUTPUTDIR)/index.html: nanowasp.html | $(OUTPUTDIR)
+	cp $< $@
 
-z80_js: z80/*
-	cd z80 && make
-	mkdir -p build
-	cat $(Z80_JS) | $(YUI) --type js > build/z80.js
-	gzip -c build/z80.js > build/z80.js.gz
+$(OUTPUTDIR)/about.html: about.html | $(OUTPUTDIR)
+	cp $< $@
+
+$(OUTPUTDIR)/.htaccess: htaccess | $(OUTPUTDIR)
+	cp $< $@
+
+$(IMAGES): $(OUTPUTDIR)/%: images/%
+	cp $< $@
+
+$(OUTPUTDIR)/nanowasp.js: $(NANOWASP_JS) | $(OUTPUTDIR)
+	cat $(NANOWASP_JS) | $(YUI) > $@
+	gzip -c $@ > $@.gz
+
+$(OUTPUTDIR)/z80.js: $(Z80_JS) | $(OUTPUTDIR) z80
+	cat $(Z80_JS) | $(YUI) > $@
+	gzip -c $@ > $@.gz
+
+.PHONY: z80
+z80:
+	cd z80 && $(MAKE)
+
+$(OUTPUTDIR):
+	mkdir -p $@
 

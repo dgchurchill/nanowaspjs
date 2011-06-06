@@ -3,4 +3,6 @@ data.js
 snapshots
 .DS_Store
 tools
-build
+debug
+release
+
