@@ -42,13 +42,19 @@ body {
 
 <div style="position: relative; min-height: 100%;">
 
-<div style="height: 905px; position: relative; z-index: 1; text-align: right;">
+<div style="height: 935px; position: relative; z-index: 1; text-align: right;">
     <a id="about_link" href="about.html" target="org.nanowasp.about">?</a>
 </div>
 
 <div style="position: absolute; bottom: 0; width: 100%;">
 	<div style="width: 1070px; position: relative; margin: 0 auto;">
+	    <div style="text-align: center; position: relative; z-index: 1;">
+	        <select id="state_selector" style="visibility: hidden;">
+	        </select>
+	    </div>
+	
 	    <img src="monitor.jpg" width="1070" height="905" style="display: block;" />
+	    
 	    <div style="width: 100%; position: absolute; top: 150px;">
 	        <div style="width:640px; margin: 0 auto;">
 	           <div id="error_message" style="display: none; position: relative; z-index: 1; background-color: rgb(238, 206, 158); padding: 10px;">

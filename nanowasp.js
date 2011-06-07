@@ -58,10 +58,31 @@ nanowasp.main = function () {
     // microbee variable is global to make debugging easier.
     microbee = new nanowasp.MicroBee(graphicsContext, pressedKeys);
 
+    var stateSelector = document.getElementById("state_selector");
+    var states = [
+        [ "island", "Shipwreck Island"],
+        [ "basic", "BASIC"],
+        [ "shell", "Shell"]
+    ];
+    
+    for (var i = 0; i < states.length; ++i) {
+        var option = document.createElement("option");
+        option.value = states[i][0];
+        option.text = states[i][1];
+        stateSelector.add(option);
+    }
+
+    stateSelector.onchange = function () {
+        microbee.reset();
+        microbee.restoreState(nanowasp.data[states[this.selectedIndex][0]]);
+    };
+
+    stateSelector.style.visibility = "visible";
+    
     window.onblur = microbee.stop.bind(microbee);
     window.onfocus = microbee.start.bind(microbee);
 
-    microbee.restoreState(nanowasp.data.island);
+    microbee.restoreState(nanowasp.data[states[0][0]]);
     microbee.start();
 };
 
