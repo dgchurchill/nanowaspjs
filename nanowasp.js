@@ -72,10 +72,13 @@ nanowasp.main = function () {
         stateSelector.add(option);
     }
 
-    stateSelector.onchange = function () {
+    var updateState = function () {
         microbee.reset();
-        microbee.restoreState(nanowasp.data[states[this.selectedIndex][0]]);
+        microbee.restoreState(nanowasp.data[states[stateSelector.selectedIndex][0]]);
     };
+    
+    stateSelector.onchange = updateState;
+    document.getElementById("reset_button").onclick = updateState;
 
     stateSelector.style.visibility = "visible";
     

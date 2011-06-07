@@ -23,16 +23,20 @@ body {
     font-family: 'Inconsolata', helvetica, sans-serif;
 }
 
-#about_link {
-    font-weight: bold;
-    font-size: 50px;
+.link {
     color: #a8a8a8;
     text-decoration: none;
-    padding: 10px;
+    cursor: pointer;
 }
 
-#about_link:hover {
+.link:hover {
     color: black;
+}
+
+#about_link {
+    font-weight: bold;
+    font-size: 40px;
+    padding: 10px;
 }
 
 </style>
@@ -43,7 +47,7 @@ body {
 <div style="position: relative; min-height: 100%;">
 
 <div style="height: 935px; position: relative; z-index: 1; text-align: right;">
-    <a id="about_link" href="about.html" target="org.nanowasp.about">?</a>
+    <a id="about_link" class="link" href="about.html" target="org.nanowasp.about">?</a>
 </div>
 
 <div style="position: absolute; bottom: 0; width: 100%;">
@@ -51,6 +55,7 @@ body {
 	    <div style="text-align: center; position: relative; z-index: 1;">
 	        <select id="state_selector" style="visibility: hidden;">
 	        </select>
+            <span id="reset_button" class="link" style="font-size: 75%;">[reset]</span>
 	    </div>
 	
 	    <img src="monitor.jpg" width="1070" height="905" style="display: block;" />
