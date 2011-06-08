@@ -80,7 +80,7 @@ nanowasp.main = function () {
     stateSelector.onchange = updateState;
     document.getElementById("reset_button").onclick = updateState;
 
-    stateSelector.style.visibility = "visible";
+    document.getElementById("controls").style.visibility = "visible";
     
     window.onblur = utils.bind0(microbee.stop, microbee);
     window.onfocus = utils.bind0(microbee.start, microbee);
