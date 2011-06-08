@@ -15,7 +15,7 @@ IMAGES=$(OUTPUTDIR)/dave.jpg $(OUTPUTDIR)/monitor.jpg
 
 
 .PHONY: nanowasp
-nanowasp: $(OUTPUTDIR)/nanowasp.js $(OUTPUTDIR)/z80.js $(OUTPUTDIR)/index.html $(OUTPUTDIR)/about.html $(IMAGES)
+nanowasp: $(OUTPUTDIR)/nanowasp.js $(OUTPUTDIR)/z80.js $(OUTPUTDIR)/index.html $(OUTPUTDIR)/.htaccess $(OUTPUTDIR)/about.html $(IMAGES)
 
 $(OUTPUTDIR)/index.html: nanowasp.html | $(OUTPUTDIR)
 	cp $< $@
