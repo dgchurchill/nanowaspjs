@@ -21,7 +21,7 @@ var nanowasp = nanowasp || {};
 
 nanowasp.MicroBee = function (graphicsContext, pressedKeys) {
     this._isRunning = false;
-    this._runSlice = this._runSliceBody.bind(this);
+    this._runSlice = utils.bind0(this._runSliceBody, this);
     this._sliceDoneCallback = null;
     
     // Create the devices
@@ -33,8 +33,8 @@ nanowasp.MicroBee = function (graphicsContext, pressedKeys) {
     this._devices.crtc = new nanowasp.Crtc(graphicsContext);
     this._devices.memMapper = new nanowasp.MemMapper();
     this._devices.rom1 = new nanowasp.Rom(utils.decodeBase64(nanowasp.data.bios));
-    this._devices.rom2 = new nanowasp.Rom(new Uint8Array(16384));
-    this._devices.rom3 = new nanowasp.Rom(new Uint8Array(16384));
+    this._devices.rom2 = new nanowasp.Rom(utils.makeUint8Array(16384));
+    this._devices.rom3 = new nanowasp.Rom(utils.makeUint8Array(16384));
     this._devices.ram0 = new nanowasp.Ram(32768);
     this._devices.ram1 = new nanowasp.Ram(32768);
     this._devices.ram2 = new nanowasp.Ram(32768);

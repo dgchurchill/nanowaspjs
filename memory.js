@@ -20,12 +20,12 @@
 var nanowasp = nanowasp || {};
 
 nanowasp.Ram = function (size) {
-	this._memory = new Uint8Array(size);
+	this._memory = utils.makeUint8Array(size);
 };
 
 nanowasp.Ram.prototype = {
     reset: function () {
-        this._memory = new Uint8Array(this.getSize());
+        this._memory = utils.makeUint8Array(this.getSize());
     },
         
     getSize: function () {

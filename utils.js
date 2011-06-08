@@ -18,6 +18,8 @@
  */
 
 var utils = {
+    // Bit manipulation functions
+        
     getBit: function (value, bit) {
         return (value >> bit) & 1;
     },
@@ -34,6 +36,21 @@ var utils = {
         return utils.clearBits(old, start, count) | (utils.getBits(value, 0, count) << start);
     },
     
+    
+    // Missing feature implementation
+    
+    /* Creates a function that calls func with this === target with no parameters. */
+    bind0: (function () {}).bind == undefined
+        ? function (func, target) { return function () { func.call(target); }; }
+        : function (func, target) { return func.bind(target); },
+                
+    makeUint8Array: typeof(Uint8Array) == "undefined"
+        ? function (size) { return new Array(size); }
+        : function (size) { return new Uint8Array(size); },
+
+        
+    // Base64 decoder
+        
     decodeBase64: function (s) {
         var encode = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
         var decode = {};
@@ -47,7 +64,7 @@ var utils = {
         if (s.length % 4 > 0) {
             len += s.length % 4 - 1;
         }
-        var result = new Uint8Array(len);
+        var result = utils.makeUint8Array(len);
         
         var resultIndex = 0;
         for (var i = 0; i < s.length; i += 4) {
@@ -117,7 +134,7 @@ utils.BinaryReader.prototype = {
     },
     
     readBuffer: function(length) {
-        var buffer = new Uint8Array(length);
+        var buffer = utils.makeUint8Array(length);
         for (var i = 0; i < length; ++i) {
             buffer[i] = this.readByte();
         }

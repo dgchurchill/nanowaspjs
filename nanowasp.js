@@ -82,8 +82,8 @@ nanowasp.main = function () {
 
     stateSelector.style.visibility = "visible";
     
-    window.onblur = microbee.stop.bind(microbee);
-    window.onfocus = microbee.start.bind(microbee);
+    window.onblur = utils.bind0(microbee.stop, microbee);
+    window.onfocus = utils.bind0(microbee.start, microbee);
 
     microbee.restoreState(nanowasp.data[states[0][0]]);
     microbee.start();
