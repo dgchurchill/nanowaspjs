@@ -69,7 +69,7 @@ nanowasp.main = function () {
         var option = document.createElement("option");
         option.value = states[i][0];
         option.text = states[i][1];
-        stateSelector.add(option);
+        stateSelector.add(option, null);
     }
 
     var updateState = function () {
