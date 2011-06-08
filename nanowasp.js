@@ -102,7 +102,7 @@ window.onload = function () {
     try {
         nanowasp.main();
     } catch (e) {
-        if (console && console.log) {
+        if (typeof(console) != "undefined" && console.log) {
             console.log(e);
         }
         
