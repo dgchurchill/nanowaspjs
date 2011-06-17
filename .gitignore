@@ -1,6 +1,7 @@
 # data.js contains ROMs, saved state, etc
 data.js
 snapshots
+roms
 .DS_Store
 tools
 debug

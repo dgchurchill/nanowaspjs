@@ -1,3 +1,0 @@
-#!/bin/bash
-openssl base64 -in "$1" | sed 's/$/\\/'
-

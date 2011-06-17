@@ -32,14 +32,14 @@ nanowasp.MicroBee = function (graphicsContext, pressedKeys) {
     this._devices.latchrom = new nanowasp.LatchRom();
     this._devices.crtc = new nanowasp.Crtc(graphicsContext);
     this._devices.memMapper = new nanowasp.MemMapper();
-    this._devices.rom1 = new nanowasp.Rom(utils.decodeBase64(nanowasp.data.bios));
+    this._devices.rom1 = new nanowasp.Rom(utils.decodeBase64(nanowasp.data.basic_5_22e));
     this._devices.rom2 = new nanowasp.Rom(utils.makeUint8Array(16384));
     this._devices.rom3 = new nanowasp.Rom(utils.makeUint8Array(16384));
     this._devices.ram0 = new nanowasp.Ram(32768);
     this._devices.ram1 = new nanowasp.Ram(32768);
     this._devices.ram2 = new nanowasp.Ram(32768);
     this._devices.ram3 = new nanowasp.Ram(32768);
-    this._devices.crtcMemory = new nanowasp.CrtcMemory(utils.decodeBase64(nanowasp.data.charRom), graphicsContext);
+    this._devices.crtcMemory = new nanowasp.CrtcMemory(utils.decodeBase64(nanowasp.data.char), graphicsContext);
 
     this._runnables = [this._devices.z80, this._devices.crtc];
 
