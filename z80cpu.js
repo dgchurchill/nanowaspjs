@@ -123,6 +123,14 @@ nanowasp.Z80Cpu.prototype = {
         return 0;  // Execute again as soon as possible.
     },
     
+    setBreakpoint: function (address, handler) {
+        z80_set_breakpoint(address, handler);
+    },
+    
+    clearBreakpoint: function () {
+        z80_clear_breakpoint();
+    },
+    
     registerMemoryDevice: function (address, handler) {
         var updated = this._registerDevice(address, handler, this.MEMORY_SIZE, this._memoryBlockSize, this._memoryHandlers);
         this._memoryBlockSize = updated.blockSize;

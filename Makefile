@@ -11,8 +11,8 @@ endif
 
 OBJDIR=$(OUTPUTDIR)/objs
 
-NANOWASP_JS=nanowasp.js crtc.js crtcmemory.js keyboard.js latchrom.js memmapper.js memory.js microbee.js utils.js z80cpu.js
-ROMS=$(OBJDIR)/basic_5_22e.js $(OBJDIR)/char.js
+NANOWASP_JS=nanowasp.js crtc.js crtcmemory.js keyboard.js latchrom.js memmapper.js memory.js microbee.js utils.js z80cpu.js virtualtape.js
+ROMS=$(OBJDIR)/basic_5_22e.js $(OBJDIR)/char.js $(OBJDIR)/bships.js
 Z80_JS=z80/z80_full.js z80/z80_ops_full.js
 IMAGES=$(OUTPUTDIR)/dave.jpg $(OUTPUTDIR)/monitor.jpg
 
