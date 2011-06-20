@@ -23,9 +23,9 @@
 
 var nanowasp = nanowasp || {};
 
-nanowasp.VirtualTape = function (z80cpu, data) {
+nanowasp.VirtualTape = function (z80cpu) {
     this._z80cpu = z80cpu;
-    this._data = data;
+    this._data = [];
     this._offset = 0;
     this._readByte = utils.bind0(this._readByteBody, this);
 };
@@ -36,6 +36,76 @@ nanowasp.VirtualTape.prototype = {
     reset: function () {
         this._offset = 0;
         this._z80cpu.setBreakpoint(this.LOCATION, this._readByte);
+    },
+    
+    loadMwb: function (name, mwbData) {
+        var headerLength = 40 + 1 + 16 + 1;
+        var blockSize = 256;
+        var fullBlockCount = Math.floor(mwbData.length / blockSize);
+        var finalBlockSize = mwbData.length % blockSize;
+        var dataLength = fullBlockCount * (blockSize + 1);
+        if (finalBlockSize > 0) {
+            dataLength += finalBlockSize + 1;
+        }
+
+        this._offset = 0;
+        this._data = utils.makeUint8Array(headerLength + dataLength);
+        var stream = new utils.MemoryStream(this._data);
+        
+        // lead-in
+        for (var i = 0; i < 40; ++i) {
+            stream.write(0);
+        }
+        
+        // header indicator
+        stream.write(1);
+        
+        // header
+        stream.clearChecksum8();
+        
+        for (var i = 0; i < 6; ++i) {
+            if (i < name.length) {
+                stream.write(name.charCodeAt(i));
+            } else {
+                stream.write(' '.charCodeAt(0));
+            }
+        }
+        
+        stream.write('B'.charCodeAt(0));
+        
+        // size
+        stream.write(mwbData.length & 0xFF);
+        stream.write(mwbData.length >> 8);
+        
+        // start address
+        stream.write(0xC0);
+        stream.write(0x08);
+        
+        // auto start address
+        stream.write(0x00);
+        stream.write(0x00);
+        
+        stream.write(0x00); // baud flag
+        stream.write(0x00); // auto start flag
+        stream.write(0x00); // reserved?
+        
+        stream.writeChecksum8();
+        
+        // data
+        var mwbStream = new utils.MemoryStream(mwbData);
+        for (var i = 0; i < fullBlockCount; ++i) {
+            for (var j = 0; j < blockSize; ++j) {
+                stream.write(mwbStream.read());
+            }
+            stream.writeChecksum8();
+        }
+        
+        if (finalBlockSize > 0) {
+            for (var j = 0; j < finalBlockSize; ++j) {
+                stream.write(mwbStream.read());
+            }
+            stream.writeChecksum8();
+        }
     },
     
     _readByteBody: function () {

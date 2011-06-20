@@ -143,3 +143,32 @@ utils.BinaryReader.prototype = {
     }
 };
 
+utils.MemoryStream = function(array) {
+    this._array = array;
+    this._offset = 0;
+    this._checksum8 = 0;
+};
+
+utils.MemoryStream.prototype = {
+    write: function (b) {
+        this._array[this._offset++] = b;
+        this._checksum8 = ((256 + b - this._checksum8) & 0xFF) ^ 0xFF;
+    },
+    
+    clearChecksum8: function () {
+        this._checksum8 = 0;
+    },
+    
+    writeChecksum8: function () {
+        this.write(this._checksum8);
+        this.clearChecksum8();
+    },
+    
+    read: function () {
+        if (this._offset >= this._array.length) {
+            return undefined;
+        }
+        
+        return this._array[this._offset++];
+    }
+};
