@@ -12,9 +12,16 @@ endif
 OBJDIR=$(OUTPUTDIR)/objs
 
 NANOWASP_JS=nanowasp.js crtc.js crtcmemory.js keyboard.js latchrom.js memmapper.js memory.js microbee.js utils.js z80cpu.js virtualtape.js
-ROMS=$(OBJDIR)/basic_5_22e.js $(OBJDIR)/char.js $(OBJDIR)/bshipsmwb.js
 Z80_JS=z80/z80_full.js z80/z80_ops_full.js
+
+ROMS=$(wildcard data/roms/*.rom)
+ROMS_JS=$(ROMS:data/roms/%.rom=$(OBJDIR)/%.js)
+
+MWBS=$(wildcard data/mwb/*.mwb)
+MWBS_JS=$(MWBS:data/mwb/%.mwb=$(OBJDIR)/%.js)
+
 IMAGES=$(OUTPUTDIR)/dave.jpg $(OUTPUTDIR)/monitor.jpg
+
 
 
 .PHONY: nanowasp
@@ -44,13 +51,19 @@ $(OUTPUTDIR)/data.js: $(OBJDIR)/data.js | $(OUTPUTDIR)
 	cat $< | $(YUI) > $@
 	gzip -c $@ > $@.gz
 
-$(OBJDIR)/data.js: $(ROMS) | $(OBJDIR)
+$(OBJDIR)/data.js: $(ROMS_JS) $(MWBS_JS) | $(OBJDIR)
 	echo "var nanowasp = nanowasp || {};" > $(OBJDIR)/data.js
 	echo "nanowasp.data = {};" >> $(OBJDIR)/data.js
-	cat $(ROMS) >> $@
+	echo "nanowasp.data.roms = {};" >> $(OBJDIR)/data.js
+	cat $(ROMS_JS) >> $@
+	echo "nanowasp.data.mwbs = {};" >> $(OBJDIR)/data.js
+	cat $(MWBS_JS) >> $@
 
-$(ROMS): $(OBJDIR)/%.js: roms/%.rom | $(OBJDIR)
-	echo "nanowasp.data.$* = \"$$(openssl base64 -in $< | sed -e "$$ ! s/$$/\\\\/")\";" > $@
+$(OBJDIR)/%.js: data/roms/%.rom | $(OBJDIR)
+	echo "nanowasp.data.roms.$* = \"$$(openssl base64 -in $< | sed -e "$$ ! s/$$/\\\\/")\";" > $@
+
+$(OBJDIR)/%.js: data/mwb/%.mwb | $(OBJDIR)
+	echo "nanowasp.data.mwbs.$* = \"$$(openssl base64 -in $< | sed -e "$$ ! s/$$/\\\\/")\";" > $@
 
 
 .PHONY: z80

@@ -59,37 +59,40 @@ nanowasp.main = function () {
     microbee = new nanowasp.MicroBee(graphicsContext, pressedKeys);
 
     /*
-    var stateSelector = document.getElementById("state_selector");
     var states = [
         [ "island", "Shipwreck Island"],
         [ "basic", "BASIC"],
         [ "shell", "Shell"]
     ];
     
-    for (var i = 0; i < states.length; ++i) {
-        var option = document.createElement("option");
-        option.value = states[i][0];
-        option.text = states[i][1];
-        stateSelector.add(option, null);
-    }
+    microbee.restoreState(nanowasp.data[states[stateSelector.selectedIndex][0]]);
     */
 
-    var updateState = function () {
-        microbee.reset();
-        //microbee.restoreState(nanowasp.data[states[stateSelector.selectedIndex][0]]);
+    var tapeSelector = document.getElementById("tape_selector");
+    
+    for (var i in nanowasp.data.mwbs) {
+        var option = document.createElement("option");
+        option.value = i;
+        option.text = i;
+        tapeSelector.add(option, null);
+    }
+    
+    var loadSelectedTape = function () {
+        var name = tapeSelector.value;
+        microbee.loadMwbTape(name, utils.decodeBase64(nanowasp.data.mwbs[name]));
     };
     
-    //stateSelector.onchange = updateState;
+    tapeSelector.onchange = loadSelectedTape;
+
+    loadSelectedTape();
     
-    
-    document.getElementById("reset_button").onclick = updateState;
+    document.getElementById("reset_button").onclick = function () { microbee.reset(); };
 
     document.getElementById("controls").style.visibility = "visible";
     
     window.onblur = utils.bind0(microbee.stop, microbee);
     window.onfocus = utils.bind0(microbee.start, microbee);
 
-    //microbee.restoreState(nanowasp.data[states[0][0]]);
     microbee.start();
 };
 
