@@ -39,7 +39,7 @@ nanowasp.MicroBee = function (graphicsContext, pressedKeys) {
     this._devices.ram1 = new nanowasp.Ram(32768);
     this._devices.ram2 = new nanowasp.Ram(32768);
     this._devices.ram3 = new nanowasp.Ram(32768);
-    this._devices.crtcMemory = new nanowasp.CrtcMemory(utils.decodeBase64(nanowasp.data.roms.char), graphicsContext);
+    this._devices.crtcMemory = new nanowasp.CrtcMemory(utils.decodeBase64(nanowasp.data.roms["char"]), graphicsContext);
     this._devices.tape = new nanowasp.VirtualTape(this._devices.z80);
     
     this._runnables = [this._devices.z80, this._devices.crtc];
