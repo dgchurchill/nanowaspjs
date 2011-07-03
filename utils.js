@@ -45,7 +45,7 @@ var utils = {
         : function (func, target) { return func.bind(target); },
                 
     makeUint8Array: typeof(Uint8Array) == "undefined"
-        ? function (size) { return new Array(size); }
+        ? function (size) { var arr = new Array(size); for (var i = 0; i < size; ++i) arr[i] = 0; return arr; }
         : function (size) { return new Uint8Array(size); },
 
         
