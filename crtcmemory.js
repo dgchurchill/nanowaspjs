@@ -29,6 +29,8 @@ nanowasp.CrtcMemory = function (charRomData, graphicsContext) {
     this._pcgImages = {};
     this._charRomImages = {};
     this._buildAllCharacters(this._charRomImages, this._charRom);
+    
+    this.clearDirtyStatus();
 };
 
 nanowasp.CrtcMemory.prototype = {
@@ -41,6 +43,10 @@ nanowasp.CrtcMemory.prototype = {
     FOREGROUND_COLOR: [247, 211, 49, 220],
     BACKGROUND_COLOR: [0, 0, 0, 0],
     BACKGROUND_COLOR_CSS: "rgba(0, 0, 0, 0)",
+    BIT_PCG: 7,
+    INDEX_START: 0,
+    INDEX_COUNT: 7,
+
 
     reset: function () {
         this._charRom.reset();
@@ -80,6 +86,7 @@ nanowasp.CrtcMemory.prototype = {
         if (address < this.VIDEO_RAM_SIZE) {
             if (!this._latchRom.isLatched()) {
                 this._videoRam.write(address, value);
+                this._dirtyVideoRam[address] = true;  // Assume the new value is different.
             }
         }
         else {
@@ -88,17 +95,39 @@ nanowasp.CrtcMemory.prototype = {
             var character = pcgAddress / this.MAX_CHAR_HEIGHT | 0;
             var row = pcgAddress % this.MAX_CHAR_HEIGHT;
             this._pcgImages[character] = this._buildCharacterRow(this._pcgImages[character], value, row);
+            this._dirtyPcgImages[character] = true;
         }
     },
-   
-    getCharacterData: function (crtcAddress, scansPerRow, cursor) {
-        var BIT_PCG = 7;
-        var INDEX_START = 0;
-        var INDEX_COUNT = 7;
+  
+    /* Determines whether the character data for the given address has changed since the last render.
+     * 
+     * The character data is dirty if the character in video memory or its corresponding bitmap data has changed.
+     */
+    isDirty: function (crtcAddress) {
+        var videoAddress = crtcAddress % this.VIDEO_RAM_SIZE;
+        if (videoAddress in this._dirtyVideoRam) {
+            return true;
+        }
         
         var b = this._videoRam.read(crtcAddress % this.VIDEO_RAM_SIZE);
-        var character = utils.getBits(b, INDEX_START, INDEX_COUNT);
-        var isPcg = utils.getBit(b, BIT_PCG) == 1;
+        var isPcg = utils.getBit(b, this.BIT_PCG) == 1;
+        if (!isPcg) {
+            return false;  // ROM-based bitmaps cannot change.
+        }
+        
+        var character = utils.getBits(b, this.INDEX_START, this.INDEX_COUNT);
+        return character in this._dirtyPcgImages;
+    },
+    
+    clearDirtyStatus: function () {
+        this._dirtyVideoRam = {};
+        this._dirtyPcgImages = {};
+    },
+    
+    getCharacterData: function (crtcAddress, scansPerRow, cursor) {
+        var b = this._videoRam.read(crtcAddress % this.VIDEO_RAM_SIZE);
+        var character = utils.getBits(b, this.INDEX_START, this.INDEX_COUNT);
+        var isPcg = utils.getBit(b, this.BIT_PCG) == 1;
         
         if (!isPcg) {
             // Select character ROM bank

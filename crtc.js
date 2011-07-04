@@ -54,6 +54,9 @@ nanowasp.Crtc.prototype = {
         this._scansPerRow = 0;
         
         this._memoryAddress = 0;
+        
+        this._previousRenderState = [];  // Used to determine if any state has changed that should force a full render.
+        this._lastCursorPosition = 0;
     },
     
     restoreState: function (state) {
@@ -287,11 +290,18 @@ nanowasp.Crtc.prototype = {
     },
     
     _render: function () {
-        // TODO: Only render changes.
+        var newRenderState = [this._displayStart, this._vDisplayed, this._hDisplayed, this._scansPerRow];
+        var fullRenderRequired = false;
+        if (!utils.listsMatch(this._previousRenderState, newRenderState)) {
+            fullRenderRequired = true;
+            this._previousRenderState = newRenderState;
+        }
         
-        this._graphicsContext.fillStyle = nanowasp.CrtcMemory.prototype.BACKGROUND_COLOR_CSS;
-        this._graphicsContext.fillRect(0, 0, this._graphicsContext.canvas.width, this._graphicsContext.canvas.height);
-        
+        if (fullRenderRequired) {
+            this._graphicsContext.fillStyle = nanowasp.CrtcMemory.prototype.BACKGROUND_COLOR_CSS;
+            this._graphicsContext.fillRect(0, 0, this._graphicsContext.canvas.width, this._graphicsContext.canvas.height);
+        }
+    
         var address = this._displayStart;
         var x = 0;
         var y = 0;
@@ -301,10 +311,12 @@ nanowasp.Crtc.prototype = {
                 if (this._cursorOn && address == this._cursorPosition) {
                     cursor = [this._cursorStart, this._cursorEnd];
                 }
-
-                var characterImage = this._crtcMemory.getCharacterData(address, this._scansPerRow, cursor);
                 
-                this._graphicsContext.putImageData(characterImage, x, y);  // TODO: Should probably only write _scansPerRow rows, but the next row will cover it up.  For the final row the excess scan lines will be off the canvas.
+                if (fullRenderRequired || cursor != null || address == this._lastCursorPosition || this._crtcMemory.isDirty(address)) {
+                    var characterImage = this._crtcMemory.getCharacterData(address, this._scansPerRow, cursor);
+                    this._graphicsContext.putImageData(characterImage, x, y, 0, 0, nanowasp.CrtcMemory.prototype.CHAR_WIDTH, this._scansPerRow);
+                }
+
                 x += nanowasp.CrtcMemory.prototype.CHAR_WIDTH;
                 var CRTC_ADDRESS_SIZE = 16384;
                 address = (address + 1) % CRTC_ADDRESS_SIZE; 
@@ -313,6 +325,9 @@ nanowasp.Crtc.prototype = {
             y += this._scansPerRow;
             x = 0;
         }
+        
+        this._lastCursorPosition = this._cursorPosition;
+        this._crtcMemory.clearDirtyStatus();
     },
 
     RegisterIndex: {
