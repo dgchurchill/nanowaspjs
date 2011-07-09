@@ -87,8 +87,6 @@ nanowasp.main = function () {
     loadSelectedTape();
     
     document.getElementById("reset_button").onclick = function () { microbee.reset(); };
-
-    document.getElementById("controls").style.visibility = "visible";
     
     window.onblur = utils.bind0(microbee.stop, microbee);
     window.onfocus = utils.bind0(microbee.start, microbee);

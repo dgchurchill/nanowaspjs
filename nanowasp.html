@@ -1,65 +1,30 @@
 <!DOCTYPE html>
-
 <html>
-
 <head>
+<link href="main.css" rel="stylesheet" type="text/css">
 <link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
-
 <title>NanoWasp</title>
-
-<style>
-
-* {
-    margin: 0;
-    padding: 0;
-}
-
-html, body {
-    height: 100%;
-}
-
-body {
-    background: rgb(238, 206, 158);
-    font-family: 'Inconsolata', helvetica, sans-serif;
-}
-
-.link {
-    color: #a8a8a8;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.link:hover {
-    color: black;
-}
-
-#about_link {
-    font-weight: bold;
-    font-size: 40px;
-    padding: 10px;
-}
-
-</style>
 </head>
 
 <body>
+<div style="position: relative; min-height: 100%; background-color: rgb(238, 206, 158);">
 
-<div style="position: relative; min-height: 100%;">
+<div id="controls">
+    <div style="float: right;">
+    Updated #UPDATE_DATE# (#VERSION#) |
+    <a href="about.html" target="org.nanowasp.about">About</a>
+    </div>
 
-<div style="height: 935px; position: relative; z-index: 1;">
-    <a id="about_link" class="link" style="float: right;" href="about.html" target="org.nanowasp.about">?</a>
-
-    <div style="padding: 5px;">1. Select a tape. 2. "load" 3. "run"</div>
+    <label>Tape: <select id="tape_selector"></select></label> |
+    <span id="reset_button" class="link">Reset</span> |
+    <a href="help.html" target="org.nanowasp.help">Help</a>
 </div>
 
+<!-- The folowing div ensures the page is tall enough to fit the monitor div.  -->
+<div style="height: 935px; position: relative;"></div>
 <div style="position: absolute; bottom: 0; width: 100%;">
-	<div style="width: 1070px; position: relative; margin: 0 auto;">
-	    <div id="controls" style="text-align: center; position: relative; z-index: 1; visibility: hidden;">
-	        <select id="tape_selector"></select>
-            <span id="reset_button" class="link" style="font-size: 75%;">[reset]</span>
-	    </div>
-	
-	    <img src="monitor.jpg" width="1070" height="905" style="display: block;" />
+	<div style="width: 1000px; position: relative; margin: 0 auto;">
+	    <img src="monitor.jpg" width="1000" height="897" style="display: block;" />
 	    
 	    <div style="width: 100%; position: absolute; top: 150px;">
 	        <div style="width:640px; margin: 0 auto;">
@@ -81,5 +46,4 @@ body {
 <script src="data.js"></script>
 
 </body>
-
 </html>

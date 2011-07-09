@@ -9,6 +9,9 @@ OUTPUTDIR=debug
 YUI=cat
 endif
 
+VERSION=$(shell git describe)
+UPDATE_DATE=$(shell date "+%Y-%m-%d")
+
 OBJDIR=$(OUTPUTDIR)/objs
 
 NANOWASP_JS=nanowasp.js crtc.js crtcmemory.js keyboard.js latchrom.js memmapper.js memory.js microbee.js utils.js z80cpu.js virtualtape.js
@@ -22,16 +25,21 @@ MWBS_JS=$(MWBS:data/mwb/%.mwb=$(OBJDIR)/%.js)
 
 IMAGES=$(OUTPUTDIR)/dave.jpg $(OUTPUTDIR)/monitor.jpg
 
+HTML=$(OUTPUTDIR)/index.html $(OUTPUTDIR)/about.html $(OUTPUTDIR)/help.html $(OUTPUTDIR)/main.css
+
 .PHONY: nanowasp
-nanowasp: $(OUTPUTDIR)/nanowasp.js $(OUTPUTDIR)/z80.js $(OUTPUTDIR)/data.js $(OUTPUTDIR)/index.html $(OUTPUTDIR)/.htaccess $(OUTPUTDIR)/about.html $(IMAGES)
+nanowasp: $(OUTPUTDIR)/nanowasp.js $(OUTPUTDIR)/z80.js $(OUTPUTDIR)/data.js $(OUTPUTDIR)/.htaccess $(HTML) $(IMAGES)
 
 $(OUTPUTDIR)/index.html: nanowasp.html | $(OUTPUTDIR)
-	cp $< $@
+	cat "$<" | sed -e 's/#UPDATE_DATE#/$(UPDATE_DATE)/' | sed -e 's/#VERSION#/$(VERSION)/' > "$@"
 
-$(OUTPUTDIR)/about.html: about.html | $(OUTPUTDIR)
-	cp $< $@
+$(OUTPUTDIR)/%.html: %.html | $(OUTPUTDIR)
+	cp "$<" "$@"
 
 $(OUTPUTDIR)/.htaccess: htaccess | $(OUTPUTDIR)
+	cp $< $@
+
+$(OUTPUTDIR)/main.css: main.css | $(OUTPUTDIR)
 	cp $< $@
 
 $(IMAGES): $(OUTPUTDIR)/%: images/% | $(OUTPUTDIR)
