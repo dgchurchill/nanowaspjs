@@ -30,18 +30,55 @@ a:hover, .link:hover {
     right: 0;
     z-index: 1;
     white-space: nowrap;
-    padding: 6px 10px;
-    background-color: rgb(40%, 40%, 60%);
-    border-style: none none solid none;
-    border-width: 1px;
-    border-color: black;
     color: white;
     text-shadow: black 0 0 4px;
+}
+
+menu {
+    list-style: none;
 }
 
 #controls a, #controls .link {
     color: white;
 }
+
+#controls li {
+	float: left;
+}
+
+#controls li.right {
+    float: right;
+}
+
+#controls li div:first-child {
+	height: 1.2em;
+	line-height: 1.2em;
+	padding: 5px;
+    background-color: rgb(40%, 40%, 60%);
+	border-style: none none solid none;
+    border-width: 1px;
+    border-color: black;
+}
+
+#controls menu {
+	position: absolute;
+	left: -999em;
+}
+
+#controls li:hover menu {
+	left: auto;
+}
+
+#controls menu li {
+    float: none;
+    background-color: rgb(40%, 40%, 60%);
+    border-style: none solid solid solid;
+    border-width: 1px;
+    border-color: black;
+}
+
+
+
 
 #content {
     width: 500px;
@@ -105,3 +142,22 @@ tr.last td {
 th {
 	border: solid 1px black;
 }
+
+
+
+
+/*
+#tapes {
+    position: relative;
+    top: 50px;
+}
+
+#tapes ul {
+	list-style: none;
+}
+
+#tapes ul li {
+	background-color: blue;
+	border: solid 1px black;
+}
+*/

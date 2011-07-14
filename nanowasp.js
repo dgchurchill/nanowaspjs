@@ -86,6 +86,33 @@ nanowasp.main = function () {
 
     loadSelectedTape();
     
+    var tapeFileInput = document.getElementById("tape_file");
+    tapeFileInput.onchange = function () {
+        if (tapeFileInput.files.length == 0) {
+            return;
+        }
+        
+        var file = tapeFileInput.files[0];
+        if (file.size > 65536) {
+            return; // TODO: Error message.
+        }
+        
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            
+            var data = utils.makeUint8Array(reader.result.length);
+            for (var i = 0; i < data.length; ++i) {
+                data[i] = reader.result.charCodeAt(i);
+            }
+            
+            microbee.loadMwbTape(file.fileName, data);
+        };
+//        reader.onerror = function (e) {
+//            console.log(reader);
+//        };
+        reader.readAsBinaryString(file);  // Not all browsers support readAsArrayBuffer
+    };
+    
     document.getElementById("reset_button").onclick = function () { microbee.reset(); };
     
     window.onblur = utils.bind0(microbee.stop, microbee);
