@@ -69,7 +69,7 @@ $(OBJDIR)/%.js: data/roms/%.rom | $(OBJDIR)
 	echo "nanowasp.data.roms['$*'] = \"$$(openssl base64 -in "$<" | sed -e "$$ ! s/$$/\\\\/")\";" > "$@"
 
 $(OBJDIR)/%.js: data/mwb/%.mwb | $(OBJDIR)
-	echo "nanowasp.data.mwbs['$*'] = \"$$(openssl base64 -in "$<" | sed -e "$$ ! s/$$/\\\\/")\";" > "$@"
+	echo "nanowasp.data.mwbs['$*.mwb'] = \"$$(openssl base64 -in "$<" | sed -e "$$ ! s/$$/\\\\/")\";" > "$@"
 
 
 .PHONY: z80

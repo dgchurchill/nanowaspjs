@@ -10,35 +10,29 @@
 <div style="position: relative; min-height: 100%; background-color: rgb(238, 206, 158);">
 
 <menu id="controls">
-    <li><div></div></li>
     <li>
         <div><a href="help.html" target="org.nanowasp.help">Help</a></div>
     </li>
-    <li><div>|</div></li>
     <li>
         <div><span id="reset_button" class="link">Reset</span></div>
     </li>
-    <li><div>|</div></li>
-    <li>
-        <div>
-            Tape
+    <li id="tape_menu">
+        <div id="tape_menuitem">
+            <span class="link">Tape: <span id="selected_tape_name"></span></span>
         </div>
-        <div id="tapes">
-      <menu>
-          <li>tape 1</li>
-          <li>tape 2</li>
-          <li>tape 3</li>
-          <li>tape 4</li>
-          <li><input id="tape_file" type="file"></input></li>
-      </menu>
-  </div>
+        <div class="dropdown">
+	        <menu id="tapes">
+	        </menu>
+	        <div class="menuitem last">
+	            Add files:<br />
+                <input id="tape_file" type="file" multiple></input>
+            </div>
+        </div>
     </li>
     
-    <li class="right"><div></div></li>
     <li class="right">
         <div><a href="about.html" target="org.nanowasp.about">About</a></div>
     </li>
-    <li class="right"><div>|</div></li>
     <li class="right">
         <div>Updated #UPDATE_DATE# (#VERSION#)</span></div>
     </li>

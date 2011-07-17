@@ -53,29 +53,47 @@ menu {
 #controls li div:first-child {
 	height: 1.2em;
 	line-height: 1.2em;
-	padding: 5px;
+	padding: 5px 10px;
     background-color: rgb(40%, 40%, 60%);
 	border-style: none none solid none;
     border-width: 1px;
     border-color: black;
 }
 
-#controls menu {
-	position: absolute;
-	left: -999em;
+#controls li.selected div:first-child {
+    background-color: rgb(115, 193, 234);
+    padding: 5px 9px;
+    border-style: none solid solid solid;
 }
 
-#controls li:hover menu {
-	left: auto;
-}
-
-#controls menu li {
-    float: none;
+#controls .dropdown {
     background-color: rgb(40%, 40%, 60%);
     border-style: none solid solid solid;
     border-width: 1px;
     border-color: black;
+    position: absolute;
+    left: -999em;
 }
+
+#controls li.selected .dropdown {
+    left: auto;
+}
+
+#controls .dropdown li {
+    float: none;
+}
+
+#controls .dropdown .menuitem {
+    padding: 5px 10px 5px 15px;
+    border-style: none none dashed none;
+    border-width: 1px;
+    border-color: lightgray;
+}
+
+#controls .dropdown .menuitem.last {
+	border-style: none;
+}
+
 
 
 

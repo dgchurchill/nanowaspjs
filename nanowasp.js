@@ -67,51 +67,44 @@ nanowasp.main = function () {
     
     microbee.restoreState(nanowasp.data[states[stateSelector.selectedIndex][0]]);
     */
-
-    var tapeSelector = document.getElementById("tape_selector");
     
-    for (var i in nanowasp.data.mwbs) {
-        var option = document.createElement("option");
-        option.value = i;
-        option.text = i;
-        tapeSelector.add(option, null);
+    document.getElementById("tape_menuitem").addEventListener(
+        "click", //"DOMActivate",
+        function () {
+            utils.toggleHtmlClass("tape_menu", "selected");
+        },
+        false);
+    
+    nanowasp.tapes = {};
+    for (var name in nanowasp.data.mwbs) {
+        nanowasp.tapes[name] = utils.decodeBase64(nanowasp.data.mwbs[name]);
     }
-    
-    var loadSelectedTape = function () {
-        var name = tapeSelector.value;
-        microbee.loadMwbTape(name, utils.decodeBase64(nanowasp.data.mwbs[name]));
-    };
-    
-    tapeSelector.onchange = loadSelectedTape;
-
-    loadSelectedTape();
     
     var tapeFileInput = document.getElementById("tape_file");
     tapeFileInput.onchange = function () {
-        if (tapeFileInput.files.length == 0) {
-            return;
-        }
-        
-        var file = tapeFileInput.files[0];
-        if (file.size > 65536) {
-            return; // TODO: Error message.
-        }
-        
-        var reader = new FileReader();
-        reader.onload = function (e) {
-            
-            var data = utils.makeUint8Array(reader.result.length);
-            for (var i = 0; i < data.length; ++i) {
-                data[i] = reader.result.charCodeAt(i);
+        for (var i = 0; i < tapeFileInput.files.length; ++i) {
+            var file = tapeFileInput.files[i];
+            if (file.size > 65536) {
+                continue; // TODO: Error message.
             }
             
-            microbee.loadMwbTape(file.fileName, data);
-        };
-//        reader.onerror = function (e) {
-//            console.log(reader);
-//        };
-        reader.readAsBinaryString(file);  // Not all browsers support readAsArrayBuffer
+            (function (f) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var data = utils.makeUint8Array(reader.result.length);
+                    for (var i = 0; i < data.length; ++i) {
+                        data[i] = reader.result.charCodeAt(i);
+                    }
+                    
+                    nanowasp.tapes[f.fileName] = data;
+                    nanowasp.update_tapes();
+                };
+                reader.readAsBinaryString(f);  // Not all browsers support readAsArrayBuffer
+            })(file);
+        }
     };
+    
+    nanowasp.update_tapes();
     
     document.getElementById("reset_button").onclick = function () { microbee.reset(); };
     
@@ -119,6 +112,32 @@ nanowasp.main = function () {
     window.onfocus = utils.bind0(microbee.start, microbee);
 
     microbee.start();
+};
+
+nanowasp.update_tapes = function () {    
+    var tapeItems = document.createDocumentFragment();
+    for (var name in nanowasp.tapes) {
+        var li = document.createElement("li");
+        li.className = "menuitem";
+        var span = document.createElement("span");
+        span.className = "link";
+        span.onclick = (function(n) {
+            return function () {
+                microbee.loadMwbTape(n, nanowasp.tapes[n]);
+                var selected_tape_name = document.getElementById("selected_tape_name");
+                selected_tape_name.innerHTML = "";
+                selected_tape_name.appendChild(document.createTextNode(n));
+                utils.removeHtmlClass("tape_menu", "selected");
+            };
+        })(name);
+        span.appendChild(document.createTextNode(name));
+        li.appendChild(span);
+        tapeItems.appendChild(li);
+    }
+    
+    var tapesMenu = document.getElementById("tapes");
+    tapesMenu.innerHTML = "";
+    tapesMenu.appendChild(tapeItems);
 };
 
 window.onload = function () {

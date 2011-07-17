@@ -37,6 +37,49 @@ var utils = {
     },
     
     
+    // Basic DOM stuff
+    addHtmlClass: function (elementId, className) {
+        var element = document.getElementById(elementId);
+        var classes = element.className.split(/\s+/);
+        for (var i = 0; i < classes.length; ++i) {
+            if (classes[i] == className) {
+                return;
+            }
+        }
+        classes.push(className);
+        element.className = classes.join(" ");
+    },
+    
+    removeHtmlClass: function (elementId, className) {
+        var element = document.getElementById(elementId);
+        var classes = element.className.split(/\s+/);
+        var newClasses = [];
+        for (var i = 0; i < classes.length; ++i) {
+            if (classes[i] != className) {
+                newClasses.push(classes[i]);
+            }
+        }
+        element.className = newClasses.join(" ");
+    },
+    
+    toggleHtmlClass: function (elementId, className) {
+        var element = document.getElementById(elementId);
+        var classes = element.className.split(/\s+/);
+        var newClasses = [];
+        var wasActive = false;
+        for (var i = 0; i < classes.length; ++i) {
+            if (classes[i] != className) {
+                newClasses.push(classes[i]);
+            } else {
+                wasActive = true;
+            }
+        }
+        if (!wasActive) {
+            newClasses.push(className);
+        }
+        element.className = newClasses.join(" ");
+    },
+    
     // Missing feature implementation
     
     /* Creates a function that calls func with this === target with no parameters. */
