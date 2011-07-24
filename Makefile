@@ -31,7 +31,7 @@ HTML=$(OUTPUTDIR)/index.html $(OUTPUTDIR)/about.html $(OUTPUTDIR)/help.html $(OU
 nanowasp: $(OUTPUTDIR)/nanowasp.js $(OUTPUTDIR)/z80.js $(OUTPUTDIR)/data.js $(OUTPUTDIR)/.htaccess $(HTML) $(IMAGES)
 
 $(OUTPUTDIR)/index.html: nanowasp.html | $(OUTPUTDIR)
-	cat "$<" | sed -e 's/#UPDATE_DATE#/$(UPDATE_DATE)/' | sed -e 's/#VERSION#/$(VERSION)/' > "$@"
+	cat "$<" | sed -e 's/#UPDATE_DATE#/$(UPDATE_DATE)/g' | sed -e 's/#VERSION#/$(VERSION)/g' > "$@"
 
 $(OUTPUTDIR)/%.html: %.html | $(OUTPUTDIR)
 	cp "$<" "$@"
