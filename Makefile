@@ -33,6 +33,7 @@ HTML=$(OUTPUTDIR)/index.html $(OUTPUTDIR)/about.html $(OUTPUTDIR)/help.html $(OU
 .PHONY: nanowasp
 nanowasp: $(OUTPUTDIR)/nanowasp.js $(OUTPUTDIR)/z80.js $(OUTPUTDIR)/data.js $(OUTPUTDIR)/.htaccess $(HTML) $(IMAGES)
 
+.PHONY: $(OUTPUTDIR)/index.html   # Always want to build this to ensure version is up to date.
 $(OUTPUTDIR)/index.html: nanowasp.html | $(OUTPUTDIR)
 	cat "$<" | sed -e 's/#UPDATE_DATE#/$(UPDATE_DATE)/g' | sed -e 's/#VERSION#/$(VERSION)/g' > "$@"
 
