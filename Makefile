@@ -9,7 +9,7 @@ OUTPUTDIR=debug
 YUI=cat
 endif
 
-VERSION=$(shell git describe)
+VERSION=$(shell git describe)$(shell if ! git diff --quiet HEAD; then echo -mods; fi;)
 UPDATE_DATE=$(shell date "+%Y-%m-%d")
 
 OBJDIR=$(OUTPUTDIR)/objs
