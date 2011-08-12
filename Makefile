@@ -13,6 +13,7 @@ VERSION=$(shell git describe)$(shell if ! git diff --quiet HEAD; then echo -mods
 UPDATE_DATE=$(shell date "+%Y-%m-%d")
 
 OBJDIR=$(OUTPUTDIR)/objs
+COREDIR=$(OUTPUTDIR)/$(VERSION)
 
 NANOWASP_JS=nanowasp.js crtc.js crtcmemory.js keyboard.js latchrom.js memmapper.js memory.js \
             microbee.js utils.js z80cpu.js virtualtape.js tapeinjector.js
@@ -27,38 +28,42 @@ MWBS_JS=$(MWBS:data/mwb/%.mwb=$(OBJDIR)/%.js)
 MACS=$(wildcard data/mac/*.mac)
 MACS_JS=$(MACS:data/mac/%.mac=$(OBJDIR)/%.js)
 
-IMAGES=$(OUTPUTDIR)/dave.jpg $(OUTPUTDIR)/monitor.jpg
-
-HTML=$(OUTPUTDIR)/index.html $(OUTPUTDIR)/about.html $(OUTPUTDIR)/help.html $(OUTPUTDIR)/main.css
+HTML=$(OUTPUTDIR)/index.html $(COREDIR)/about.html $(COREDIR)/help.html $(COREDIR)/main.css
+JAVASCRIPT=$(COREDIR)/nanowasp.js $(COREDIR)/z80.js $(COREDIR)/data.js
+IMAGES=$(COREDIR)/dave.jpg $(COREDIR)/monitor.jpg
+HTACCESS=$(COREDIR)/.htaccess
 
 .PHONY: nanowasp
-nanowasp: $(OUTPUTDIR)/nanowasp.js $(OUTPUTDIR)/z80.js $(OUTPUTDIR)/data.js $(OUTPUTDIR)/.htaccess $(HTML) $(IMAGES)
+nanowasp: $(HTML) $(JAVASCRIPT) $(IMAGES) $(HTACCESS)
 
-.PHONY: $(OUTPUTDIR)/index.html   # Always want to build this to ensure version is up to date.
-$(OUTPUTDIR)/index.html: nanowasp.html | $(OUTPUTDIR)
+# Used as a dependency for targets that should always be built (e.g. targets that need to update if $(VERSION) changes).
+.PHONY: force_build
+force_build:
+
+$(OUTPUTDIR)/index.html: nanowasp.html force_build | $(OUTPUTDIR)
 	cat "$<" | sed -e 's/#UPDATE_DATE#/$(UPDATE_DATE)/g' | sed -e 's/#VERSION#/$(VERSION)/g' > "$@"
 
-$(OUTPUTDIR)/%.html: %.html | $(OUTPUTDIR)
+$(COREDIR)/%.html: %.html | $(COREDIR)
 	cp "$<" "$@"
 
-$(OUTPUTDIR)/.htaccess: htaccess | $(OUTPUTDIR)
+$(COREDIR)/.htaccess: htaccess | $(COREDIR)
 	cp $< $@
 
-$(OUTPUTDIR)/main.css: main.css | $(OUTPUTDIR)
+$(COREDIR)/main.css: main.css | $(COREDIR)
 	cp $< $@
 
-$(IMAGES): $(OUTPUTDIR)/%: images/% | $(OUTPUTDIR)
+$(IMAGES): $(COREDIR)/%: images/% | $(COREDIR)
 	cp $< $@
 
-$(OUTPUTDIR)/nanowasp.js: $(NANOWASP_JS) | $(OUTPUTDIR)
+$(COREDIR)/nanowasp.js: $(NANOWASP_JS) | $(COREDIR)
 	cat $(NANOWASP_JS) | $(YUI) > $@
 	gzip -c $@ > $@.gz
 
-$(OUTPUTDIR)/z80.js: $(Z80_JS) | $(OUTPUTDIR) z80
+$(COREDIR)/z80.js: $(Z80_JS) | $(COREDIR) z80
 	cat $(Z80_JS) | $(YUI) > $@
 	gzip -c $@ > $@.gz
 
-$(OUTPUTDIR)/data.js: $(OBJDIR)/nanowasp-data.js | $(OUTPUTDIR)
+$(COREDIR)/data.js: $(OBJDIR)/nanowasp-data.js | $(COREDIR)
 	cat $< | $(YUI) > $@
 	gzip -c $@ > $@.gz
 
@@ -91,3 +96,5 @@ $(OUTPUTDIR):
 $(OBJDIR):
 	mkdir -p $@
 
+$(COREDIR):
+	mkdir -p $@
