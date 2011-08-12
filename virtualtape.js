@@ -23,43 +23,54 @@
 
 var nanowasp = nanowasp || {};
 
-nanowasp.VirtualTape = function (z80cpu) {
-    this._z80cpu = z80cpu;
-    this._data = [];
-    this._offset = 0;
-    this._readByte = utils.bind0(this._readByteBody, this);
+nanowasp.VirtualTape = function (name, data, typeCode, startAddress, autoStartAddress, isAutoStart, extra) {
+    if (data.length > 0xFFFF) {
+        throw {
+            name: "ArgumentError",
+            message: "'data' must be less than 64k in size."
+        };
+    }
+    
+    this.name = name;
+    this.data = data;
+    this.typeCode = typeCode;
+    this.startAddress = startAddress;
+    this.autoStartAddress = autoStartAddress;
+    this.isAutoStart = isAutoStart;
+    this.extra = extra;
+};
+
+nanowasp.VirtualTape.createAutoTape = function (name, data) {
+    if (/\.mac$/.test(name)) {
+        return nanowasp.VirtualTape.createMacTape(name, data);
+    } else {
+        return nanowasp.VirtualTape.createMwbTape(name, data);
+    }
+};
+
+nanowasp.VirtualTape.createMwbTape = function (name, data) {
+    var extra = 0x47;  // temporary, for frank.mwb
+    return new nanowasp.VirtualTape(name, data, 'B', 0x08C0, 0x0000, false, extra);
+};
+
+nanowasp.VirtualTape.createMacTape = function (name, data) {
+    return new nanowasp.VirtualTape(name, data, 'M', 0x0900, 0x0900, true, 0x00);    
 };
 
 nanowasp.VirtualTape.prototype = {
-    LOCATION: 0xAB6D,
-     
-    reset: function () {
-        this._offset = 0;
-        this._z80cpu.setBreakpoint(this.LOCATION, this._readByte);
-    },
-    
-    loadMwb: function (name, data) {
-        var extra = 0x47;  // temporary, for frank.mwb
-        this.loadTape(name, data, 'B', 0x08C0, 0x0000, false, extra);
-    },
-    
-    loadMac: function (name, data) {
-        this.loadTape(name, data, 'M', 0x0900, 0x0900, true, 0x00);
-    },
-    
-    loadTape: function (name, data, typeCode, startAddress, autoStartAddress, isAutoStart, extra) {
+    // Returns a byte array containing the data as it would be stored on tape (i.e. including tape header and checksummed blocks).
+    getFormattedData: function () {
         var headerLength = 40 + 1 + 16 + 1;
         var blockSize = 256;
-        var fullBlockCount = Math.floor(data.length / blockSize);
-        var finalBlockSize = data.length % blockSize;
+        var fullBlockCount = Math.floor(this.data.length / blockSize);
+        var finalBlockSize = this.data.length % blockSize;
         var dataLength = fullBlockCount * (blockSize + 1);
         if (finalBlockSize > 0) {
             dataLength += finalBlockSize + 1;
         }
 
-        this._offset = 0;
-        this._data = utils.makeUint8Array(headerLength + dataLength);
-        var stream = new utils.MemoryStream(this._data);
+        var formattedData = utils.makeUint8Array(headerLength + dataLength);
+        var stream = new utils.MemoryStream(formattedData);
         
         // lead-in
         for (var i = 0; i < 40; ++i) {
@@ -73,38 +84,38 @@ nanowasp.VirtualTape.prototype = {
         stream.clearChecksum8();
         
         for (var i = 0; i < 6; ++i) {
-            if (i < name.length) {
-                stream.write(name.charCodeAt(i));
+            if (i < this.name.length) {
+                stream.write(this.name.charCodeAt(i));
             } else {
                 stream.write(' '.charCodeAt(0));
             }
         }
         
-        stream.write(typeCode.charCodeAt(0));
+        stream.write(this.typeCode.charCodeAt(0));
         
-        stream.write(data.length & 0xFF);  // TODO: Make robust to lengths > 64k (really want a binary writer that writes words).
-        stream.write(data.length >> 8);
+        stream.write(this.data.length & 0xFF);  // TODO: Add a stream write function that writes shorts.
+        stream.write(this.data.length >> 8);
         
-        stream.write(startAddress & 0xFF);
-        stream.write(startAddress >> 8);
+        stream.write(this.startAddress & 0xFF);
+        stream.write(this.startAddress >> 8);
         
-        stream.write(autoStartAddress & 0xFF);
-        stream.write(autoStartAddress >> 8);
+        stream.write(this.autoStartAddress & 0xFF);
+        stream.write(this.autoStartAddress >> 8);
         
         stream.write(0x00); // baud flag
         
-        if (isAutoStart) {
+        if (this.isAutoStart) {
             stream.write(0xFF);
         } else {
             stream.write(0x00);
         }
         
-        stream.write(extra);
+        stream.write(this.extra);
         
         stream.writeChecksum8();
         
         // data
-        var dataStream = new utils.MemoryStream(data);
+        var dataStream = new utils.MemoryStream(this.data);
         for (var i = 0; i < fullBlockCount; ++i) {
             for (var j = 0; j < blockSize; ++j) {
                 stream.write(dataStream.read());
@@ -118,17 +129,8 @@ nanowasp.VirtualTape.prototype = {
             }
             stream.writeChecksum8();
         }
-    },
-    
-    _readByteBody: function () {
-        var value = 0;
-        if (this._offset < this._data.length) {
-            value = this._data[this._offset];
-            this._offset++;
-        }
         
-        z80.a = value;
-        z80_ret();
+        return formattedData;
     }
 };
 

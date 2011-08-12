@@ -40,7 +40,7 @@ nanowasp.MicroBee = function (graphicsContext, pressedKeys) {
     this._devices.ram2 = new nanowasp.Ram(32768);
     this._devices.ram3 = new nanowasp.Ram(32768);
     this._devices.crtcMemory = new nanowasp.CrtcMemory(utils.decodeBase64(nanowasp.data.roms["char"]), graphicsContext);
-    this._devices.tape = new nanowasp.VirtualTape(this._devices.z80);
+    this._devices.tapeInjector = new nanowasp.TapeInjector(this._devices.z80);
     
     this._runnables = [this._devices.z80, this._devices.crtc];
 
@@ -146,11 +146,7 @@ nanowasp.MicroBee.prototype = {
         return this._isRunning;
     },
     
-    loadMwbTape: function (name, data) {
-        this._devices.tape.loadMwb(name, data);
-    },
-    
-    loadMacTape: function (name, data) {
-        this._devices.tape.loadMac(name, data);
+    loadTape: function (tape) {
+        this._devices.tapeInjector.loadTape(tape);
     }
 };

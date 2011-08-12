@@ -14,7 +14,8 @@ UPDATE_DATE=$(shell date "+%Y-%m-%d")
 
 OBJDIR=$(OUTPUTDIR)/objs
 
-NANOWASP_JS=nanowasp.js crtc.js crtcmemory.js keyboard.js latchrom.js memmapper.js memory.js microbee.js utils.js z80cpu.js virtualtape.js
+NANOWASP_JS=nanowasp.js crtc.js crtcmemory.js keyboard.js latchrom.js memmapper.js memory.js \
+            microbee.js utils.js z80cpu.js virtualtape.js tapeinjector.js
 Z80_JS=z80/z80_full.js z80/z80_ops_full.js
 
 ROMS=$(wildcard data/roms/*.rom)

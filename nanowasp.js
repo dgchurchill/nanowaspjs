@@ -77,14 +77,14 @@ nanowasp.main = function () {
     
     nanowasp.tapes = {};
     for (var name in nanowasp.data.mwbs) {
-        nanowasp.tapes[name] = utils.decodeBase64(nanowasp.data.mwbs[name]);
+        nanowasp.tapes[name] = nanowasp.VirtualTape.createAutoTape(name, utils.decodeBase64(nanowasp.data.mwbs[name]));
     }
     
     var tapeFileInput = document.getElementById("tape_file");
     tapeFileInput.onchange = function () {
         for (var i = 0; i < tapeFileInput.files.length; ++i) {
             var file = tapeFileInput.files[i];
-            if (file.size > 65536) {
+            if (file.size > 65535) {
                 continue; // TODO: Error message.
             }
             
@@ -96,7 +96,7 @@ nanowasp.main = function () {
                         data[i] = reader.result.charCodeAt(i);
                     }
                     
-                    nanowasp.tapes[f.fileName] = data;
+                    nanowasp.tapes[f.fileName] = nanowasp.VirtualTape.createAutoTape(f.fileName, data);
                     nanowasp.update_tapes();
                 };
                 reader.readAsBinaryString(f);  // Not all browsers support readAsArrayBuffer
@@ -123,11 +123,7 @@ nanowasp.update_tapes = function () {
         span.className = "link";
         span.onclick = (function(n) {
             return function () {
-                if (/\.mac$/.test(n)) {
-                    microbee.loadMacTape(n, nanowasp.tapes[n]);
-                } else {
-                    microbee.loadMwbTape(n, nanowasp.tapes[n]);
-                }
+                microbee.loadTape(nanowasp.tapes[n]);
                 var selected_tape_name = document.getElementById("selected_tape_name");
                 selected_tape_name.innerHTML = "";
                 selected_tape_name.appendChild(document.createTextNode(n));
