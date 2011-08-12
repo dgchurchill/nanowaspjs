@@ -38,11 +38,20 @@ nanowasp.VirtualTape.prototype = {
         this._z80cpu.setBreakpoint(this.LOCATION, this._readByte);
     },
     
-    loadMwb: function (name, mwbData) {
+    loadMwb: function (name, data) {
+        var extra = 0x47;  // temporary, for frank.mwb
+        this.loadTape(name, data, 'B', 0x08C0, 0x0000, false, extra);
+    },
+    
+    loadMac: function (name, data) {
+        this.loadTape(name, data, 'M', 0x0900, 0x0900, true, 0x00);
+    },
+    
+    loadTape: function (name, data, typeCode, startAddress, autoStartAddress, isAutoStart, extra) {
         var headerLength = 40 + 1 + 16 + 1;
         var blockSize = 256;
-        var fullBlockCount = Math.floor(mwbData.length / blockSize);
-        var finalBlockSize = mwbData.length % blockSize;
+        var fullBlockCount = Math.floor(data.length / blockSize);
+        var finalBlockSize = data.length % blockSize;
         var dataLength = fullBlockCount * (blockSize + 1);
         if (finalBlockSize > 0) {
             dataLength += finalBlockSize + 1;
@@ -71,38 +80,41 @@ nanowasp.VirtualTape.prototype = {
             }
         }
         
-        stream.write('B'.charCodeAt(0));
+        stream.write(typeCode.charCodeAt(0));
         
-        // size
-        stream.write(mwbData.length & 0xFF);
-        stream.write(mwbData.length >> 8);
+        stream.write(data.length & 0xFF);  // TODO: Make robust to lengths > 64k (really want a binary writer that writes words).
+        stream.write(data.length >> 8);
         
-        // start address
-        stream.write(0xC0);
-        stream.write(0x08);
+        stream.write(startAddress & 0xFF);
+        stream.write(startAddress >> 8);
         
-        // auto start address
-        stream.write(0x00);
-        stream.write(0x00);
+        stream.write(autoStartAddress & 0xFF);
+        stream.write(autoStartAddress >> 8);
         
         stream.write(0x00); // baud flag
-        stream.write(0x00); // auto start flag
-        stream.write(0x00); // reserved?
+        
+        if (isAutoStart) {
+            stream.write(0xFF);
+        } else {
+            stream.write(0x00);
+        }
+        
+        stream.write(extra);
         
         stream.writeChecksum8();
         
         // data
-        var mwbStream = new utils.MemoryStream(mwbData);
+        var dataStream = new utils.MemoryStream(data);
         for (var i = 0; i < fullBlockCount; ++i) {
             for (var j = 0; j < blockSize; ++j) {
-                stream.write(mwbStream.read());
+                stream.write(dataStream.read());
             }
             stream.writeChecksum8();
         }
         
         if (finalBlockSize > 0) {
             for (var j = 0; j < finalBlockSize; ++j) {
-                stream.write(mwbStream.read());
+                stream.write(dataStream.read());
             }
             stream.writeChecksum8();
         }

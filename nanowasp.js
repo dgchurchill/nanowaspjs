@@ -123,7 +123,11 @@ nanowasp.update_tapes = function () {
         span.className = "link";
         span.onclick = (function(n) {
             return function () {
-                microbee.loadMwbTape(n, nanowasp.tapes[n]);
+                if (/\.mac$/.test(n)) {
+                    microbee.loadMacTape(n, nanowasp.tapes[n]);
+                } else {
+                    microbee.loadMwbTape(n, nanowasp.tapes[n]);
+                }
                 var selected_tape_name = document.getElementById("selected_tape_name");
                 selected_tape_name.innerHTML = "";
                 selected_tape_name.appendChild(document.createTextNode(n));

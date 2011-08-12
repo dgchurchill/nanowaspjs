@@ -148,5 +148,9 @@ nanowasp.MicroBee.prototype = {
     
     loadMwbTape: function (name, data) {
         this._devices.tape.loadMwb(name, data);
+    },
+    
+    loadMacTape: function (name, data) {
+        this._devices.tape.loadMac(name, data);
     }
 };

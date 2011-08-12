@@ -23,6 +23,9 @@ ROMS_JS=$(ROMS:data/roms/%.rom=$(OBJDIR)/%.js)
 MWBS=$(wildcard data/mwb/*.mwb)
 MWBS_JS=$(MWBS:data/mwb/%.mwb=$(OBJDIR)/%.js)
 
+MACS=$(wildcard data/mac/*.mac)
+MACS_JS=$(MACS:data/mac/%.mac=$(OBJDIR)/%.js)
+
 IMAGES=$(OUTPUTDIR)/dave.jpg $(OUTPUTDIR)/monitor.jpg
 
 HTML=$(OUTPUTDIR)/index.html $(OUTPUTDIR)/about.html $(OUTPUTDIR)/help.html $(OUTPUTDIR)/main.css
@@ -57,19 +60,23 @@ $(OUTPUTDIR)/data.js: $(OBJDIR)/nanowasp-data.js | $(OUTPUTDIR)
 	cat $< | $(YUI) > $@
 	gzip -c $@ > $@.gz
 
-$(OBJDIR)/nanowasp-data.js: $(ROMS_JS) $(MWBS_JS) | $(OBJDIR)
+$(OBJDIR)/nanowasp-data.js: $(ROMS_JS) $(MWBS_JS) $(MACS_JS) | $(OBJDIR)
 	echo "var nanowasp = nanowasp || {};" > $@
 	echo "nanowasp.data = {};" >> $@
 	echo "nanowasp.data.roms = {};" >> $@
 	cat $(ROMS_JS:%="%") >> $@
 	echo "nanowasp.data.mwbs = {};" >> $@
 	cat $(MWBS_JS:%="%") >> $@
+	cat $(MACS_JS:%="%") >> $@
 
 $(OBJDIR)/%.js: data/roms/%.rom | $(OBJDIR)
 	echo "nanowasp.data.roms['$*'] = \"$$(openssl base64 -in "$<" | sed -e "$$ ! s/$$/\\\\/")\";" > "$@"
 
 $(OBJDIR)/%.js: data/mwb/%.mwb | $(OBJDIR)
 	echo "nanowasp.data.mwbs['$*.mwb'] = \"$$(openssl base64 -in "$<" | sed -e "$$ ! s/$$/\\\\/")\";" > "$@"
+
+$(OBJDIR)/%.js: data/mac/%.mac | $(OBJDIR)
+	echo "nanowasp.data.mwbs['$*.mac'] = \"$$(openssl base64 -in "$<" | sed -e "$$ ! s/$$/\\\\/")\";" > "$@"
 
 
 .PHONY: z80
