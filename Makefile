@@ -28,7 +28,7 @@ MWBS_JS=$(MWBS:data/mwb/%.mwb=$(OBJDIR)/%.js)
 MACS=$(wildcard data/mac/*.mac)
 MACS_JS=$(MACS:data/mac/%.mac=$(OBJDIR)/%.js)
 
-HTML=$(OUTPUTDIR)/index.html $(COREDIR)/about.html $(COREDIR)/help.html $(COREDIR)/main.css
+HTML=$(OUTPUTDIR)/index.html $(OUTPUTDIR)/maintenance.html $(COREDIR)/about.html $(COREDIR)/help.html $(COREDIR)/main.css
 JAVASCRIPT=$(COREDIR)/nanowasp.js $(COREDIR)/z80.js $(COREDIR)/data.js
 IMAGES=$(COREDIR)/dave.jpg $(COREDIR)/monitor.jpg
 HTACCESS=$(COREDIR)/.htaccess
@@ -41,6 +41,9 @@ nanowasp: $(HTML) $(JAVASCRIPT) $(IMAGES) $(HTACCESS)
 force_build:
 
 $(OUTPUTDIR)/index.html: nanowasp.html force_build | $(OUTPUTDIR)
+	cat "$<" | sed -e 's/#UPDATE_DATE#/$(UPDATE_DATE)/g' | sed -e 's/#VERSION#/$(VERSION)/g' > "$@"
+
+$(OUTPUTDIR)/maintenance.html: maintenance.html force_build | $(OUTPUTDIR)
 	cat "$<" | sed -e 's/#UPDATE_DATE#/$(UPDATE_DATE)/g' | sed -e 's/#VERSION#/$(VERSION)/g' > "$@"
 
 $(COREDIR)/%.html: %.html | $(COREDIR)
