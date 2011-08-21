@@ -62,6 +62,8 @@ var utils = {
         element.className = newClasses.join(" ");
     },
     
+    // Removes the 'className' class from 'elementId' if it currently contains it and vice-versa.
+    // Returns true if the class is now enabled or false otherwise.
     toggleHtmlClass: function (elementId, className) {
         var element = document.getElementById(elementId);
         var classes = element.className.split(/\s+/);
@@ -78,6 +80,8 @@ var utils = {
             newClasses.push(className);
         }
         element.className = newClasses.join(" ");
+        
+        return !wasActive;
     },
     
     // Missing feature implementation

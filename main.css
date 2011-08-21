@@ -59,7 +59,7 @@ menu {
     float: right;
 }
 
-#controls li div:first-child {
+#controls li > div:first-child {
 	height: 1.2em;
 	line-height: 1.2em;
 	padding: 5px 10px;
@@ -69,7 +69,7 @@ menu {
     border-color: black;
 }
 
-#controls li.selected div:first-child {
+#controls li.selected > div:first-child {
     background-color: rgb(115, 193, 234);
     padding: 5px 9px;
     border-style: none solid solid solid;
@@ -171,20 +171,25 @@ th {
 }
 
 
-
-
-/*
-#tapes {
-    position: relative;
-    top: 50px;
+form p {
+    margin-top: 5px;
 }
 
-#tapes ul {
-	list-style: none;
+label {
+    display: inline-block;
+    font-size: 80%;
+    margin-left: 10px;
 }
 
-#tapes ul li {
-	background-color: blue;
-	border: solid 1px black;
+input {
+    display: block;
 }
-*/
+
+input[type="checkbox"] { 
+    display: inline;
+    margin-right: 5px;
+}
+
+.right {
+	float: right;
+}

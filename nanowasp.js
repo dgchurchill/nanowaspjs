@@ -19,125 +19,165 @@
 
 var nanowasp = nanowasp || {};
 
-nanowasp.main = function () {
-    var usedKeys = {};
-    var keyMap = nanowasp.Keyboard.prototype.keyMap;
-    for (var i = 0; i < keyMap.length; ++i) {
-        usedKeys[keyMap[i]] = true;
-    }
-    
-    var ignoreKey = function (event) {
-        return event.metaKey || !(event.keyCode in usedKeys);
-    };
-    
-    var pressedKeys = [];
-    window.onkeydown = function (event) {
-        if (ignoreKey(event)) {
-            return true;
-        }
-
-        pressedKeys[event.keyCode] = true;
-        return false;
-    };
-
-    window.onkeypress = function (event) {
-        return ignoreKey(event);
-    };
-
-    window.onkeyup = function (event) {
-        if (ignoreKey(event)) {
-            return true;
-        }
-
-        pressedKeys[event.keyCode] = false;
-        return false;
-    };
-
-    var graphicsContext = document.getElementById("vdu").getContext('2d');
-    
-    // microbee variable is global to make debugging easier.
-    microbee = new nanowasp.MicroBee(graphicsContext, pressedKeys);
-
-    /*
-    var states = [
-        [ "island", "Shipwreck Island"],
-        [ "basic", "BASIC"],
-        [ "shell", "Shell"]
-    ];
-    
-    microbee.restoreState(nanowasp.data[states[stateSelector.selectedIndex][0]]);
-    */
-    
-    document.getElementById("tape_menuitem").addEventListener(
-        "click", //"DOMActivate",
-        function () {
-            utils.toggleHtmlClass("tape_menu", "selected");
-        },
-        false);
-    
-    nanowasp.tapes = {};
-    for (var name in nanowasp.data.mwbs) {
-        nanowasp.tapes[name] = nanowasp.VirtualTape.createAutoTape(name, utils.decodeBase64(nanowasp.data.mwbs[name]));
-    }
-    
-    var tapeFileInput = document.getElementById("tape_file");
-    tapeFileInput.onchange = function () {
-        for (var i = 0; i < tapeFileInput.files.length; ++i) {
-            var file = tapeFileInput.files[i];
-            if (file.size > 65535) {
-                continue; // TODO: Error message.
-            }
-            
-            (function (f) {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    var data = utils.makeUint8Array(reader.result.length);
-                    for (var i = 0; i < data.length; ++i) {
-                        data[i] = reader.result.charCodeAt(i);
-                    }
-                    
-                    nanowasp.tapes[f.fileName] = nanowasp.VirtualTape.createAutoTape(f.fileName, data);
-                    nanowasp.update_tapes();
-                };
-                reader.readAsBinaryString(f);  // Not all browsers support readAsArrayBuffer
-            })(file);
-        }
-    };
-    
-    nanowasp.update_tapes();
-    
-    document.getElementById("reset_button").onclick = function () { microbee.reset(); };
-    
-    window.onblur = utils.bind0(microbee.stop, microbee);
-    window.onfocus = utils.bind0(microbee.start, microbee);
-
-    microbee.start();
+nanowasp.NanoWasp = function () {
+    this._sendKeysToMicrobee = true;
 };
 
-nanowasp.update_tapes = function () {    
-    var tapeItems = document.createDocumentFragment();
-    for (var name in nanowasp.tapes) {
-        var li = document.createElement("li");
-        li.className = "menuitem";
-        var span = document.createElement("span");
-        span.className = "link";
-        span.onclick = (function(n) {
-            return function () {
-                microbee.loadTape(nanowasp.tapes[n]);
-                var selected_tape_name = document.getElementById("selected_tape_name");
-                selected_tape_name.innerHTML = "";
-                selected_tape_name.appendChild(document.createTextNode(n));
-                utils.removeHtmlClass("tape_menu", "selected");
+nanowasp.NanoWasp.prototype = {     
+    main: function () {
+        var usedKeys = {};
+        var keyMap = nanowasp.Keyboard.prototype.keyMap;
+        for (var i = 0; i < keyMap.length; ++i) {
+            usedKeys[keyMap[i]] = true;
+        }
+        
+        var ignoreKey = (function (this_) {
+            return function (event) {
+                return !this_._sendKeysToMicrobee || event.metaKey || !(event.keyCode in usedKeys);
             };
-        })(name);
-        span.appendChild(document.createTextNode(name));
-        li.appendChild(span);
-        tapeItems.appendChild(li);
-    }
+        })(this);
+        
+        var pressedKeys = [];
+        window.onkeydown = function (event) {
+            if (ignoreKey(event)) {
+                return true;
+            }
     
-    var tapesMenu = document.getElementById("tapes");
-    tapesMenu.innerHTML = "";
-    tapesMenu.appendChild(tapeItems);
+            pressedKeys[event.keyCode] = true;
+            return false;
+        };
+    
+        window.onkeypress = function (event) {
+            return ignoreKey(event);
+        };
+    
+        window.onkeyup = function (event) {
+            if (ignoreKey(event)) {
+                return true;
+            }
+    
+            pressedKeys[event.keyCode] = false;
+            return false;
+        };
+    
+        var graphicsContext = document.getElementById("vdu").getContext('2d');
+        
+        this.microbee = new nanowasp.MicroBee(graphicsContext, pressedKeys);
+        var microbee = this.microbee;
+    
+        /*
+        var states = [
+            [ "island", "Shipwreck Island"],
+            [ "basic", "BASIC"],
+            [ "shell", "Shell"]
+        ];
+        
+        microbee.restoreState(nanowasp.data[states[stateSelector.selectedIndex][0]]);
+        */
+        
+        document.getElementById("tape_menuitem").addEventListener(
+            "click", //"DOMActivate",
+            utils.bind0(this._toggle_tapes_menu, this),
+            false);
+        
+        nanowasp.tapes = {};
+        for (var name in nanowasp.data.mwbs) {
+            nanowasp.tapes[name] = nanowasp.VirtualTape.createAutoTape(name, utils.decodeBase64(nanowasp.data.mwbs[name]));
+        }
+        
+        var tapeFileInput = document.getElementById("tape_file");
+        var update_tapes = utils.bind0(this._update_tapes, this);
+        tapeFileInput.onchange = function () {
+            for (var i = 0; i < tapeFileInput.files.length; ++i) {
+                var file = tapeFileInput.files[i];
+                if (file.size > 65535) {
+                    continue; // TODO: Error message.
+                }
+                
+                (function (f) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        var data = utils.makeUint8Array(reader.result.length);
+                        for (var i = 0; i < data.length; ++i) {
+                            data[i] = reader.result.charCodeAt(i);
+                        }
+                        
+                        nanowasp.tapes[f.fileName] = nanowasp.VirtualTape.createAutoTape(f.fileName, data);
+                        update_tapes();
+                    };
+                    reader.readAsBinaryString(f);  // Not all browsers support readAsArrayBuffer
+                })(file);
+            }
+        };
+        
+        this._update_tapes();
+        
+        document.getElementById("reset_button").onclick = function () { microbee.reset(); };
+        
+        window.onblur = utils.bind0(microbee.stop, microbee);
+        window.onfocus = utils.bind0(microbee.start, microbee);
+    
+        microbee.start();
+    },
+    
+    _toggle_tapes_menu: function () {
+        var is_selected = utils.toggleHtmlClass("tape_menu", "selected");
+        this._sendKeysToMicrobee = !is_selected;
+    },
+    
+    _hide_tapes_menu: function () {
+        utils.removeHtmlClass("tape_menu", "selected");
+        this._sendKeysToMicrobee = true;
+    },
+
+    _update_tapes: function () {    
+        var tapeItems = document.createDocumentFragment();
+        for (var name in nanowasp.tapes) {
+            var li = document.createElement("li");
+            li.className = "menuitem";
+            
+            var span = document.createElement("span");
+            span.className = "link";
+            span.onclick = (function(name_, this_) {
+                return function () {
+                    this_.microbee.loadTape(nanowasp.tapes[name_]);
+                    var selected_tape_name = document.getElementById("selected_tape_name");
+                    selected_tape_name.innerHTML = "";
+                    selected_tape_name.appendChild(document.createTextNode(name_));
+                    this_._hide_tapes_menu();
+                };
+            })(name, this);
+            span.appendChild(document.createTextNode(name));
+            li.appendChild(span);
+            
+            var edit_span = document.createElement("span");
+            edit_span.className = "link right";
+            edit_span.onclick = (function(name_, li_, edit_span_) {
+                var settings = null;
+                
+                return function () {
+                    if (settings == null) {
+                        var tape = nanowasp.tapes[name_];
+                        settings = new nanowasp.TapeSettings(tape);
+                        settings.insertForm(li_);
+                        edit_span_.innerHTML = "done";
+                    } else {
+                        settings.removeForm();
+                        settings = null;
+                        edit_span_.innerHTML = "edit";
+                    }
+                };
+            })(name, li, edit_span);
+            edit_span.appendChild(document.createTextNode("edit"));
+            li.appendChild(edit_span);
+            
+            tapeItems.appendChild(li);
+        }
+        
+        var tapesMenu = document.getElementById("tapes");
+        tapesMenu.innerHTML = "";
+        tapesMenu.appendChild(tapeItems);
+    }
 };
 
 window.onload = function () {
@@ -151,7 +191,9 @@ window.onload = function () {
     // TODO: It may be a good idea to put a similar try/catch around MicroBee._runSliceBody.
     
     try {
-        nanowasp.main();
+        // nw variable is global to make debugging easier.
+        nw = new nanowasp.NanoWasp();
+        nw.main();
     } catch (e) {
         if (typeof(console) != "undefined" && console.log) {
             console.log(e);
