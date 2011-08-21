@@ -181,6 +181,10 @@ label {
     margin-left: 10px;
 }
 
+label.invalid {
+    color: red;
+}
+
 input {
     display: block;
 }
@@ -189,6 +193,7 @@ input[type="checkbox"] {
     display: inline;
     margin-right: 5px;
 }
+
 
 .right {
 	float: right;

@@ -28,13 +28,17 @@ nanowasp.TapeSettings = function (tape) {
 
 nanowasp.TapeSettings.prototype = {
     insertForm: function (parent) {
-        this._form = this._createForm([
-                { name: 'td_name', label: 'Name' },
-                { name: 'td_type_code', label: 'Type code' },
-                { name: 'td_extra', label: 'Extra byte' },
-                { name: 'td_start_address', label: 'Start address' },
-                { name: 'td_auto_start_address', label: 'Auto start address' },
-                { name: 'td_is_auto_start', label: 'Auto started', type: 'checkbox' }
+        var toHex = function (v) { return "0x" + v.toString(16); };
+        
+        this._form = this._createForm(
+            this._tape,
+            [
+                { property: 'name', label: 'Name' },
+                { property: 'typeCode', label: 'Type code' },
+                { property: 'extra', label: 'Extra byte', validator: this._integerValidator(0, 0xFF), renderer: toHex },
+                { property: 'startAddress', label: 'Start address', validator: this._integerValidator(0, 0xFFFF), renderer: toHex },
+                { property: 'autoStartAddress', label: 'Auto start address', validator: this._integerValidator(0, 0xFFFF), renderer: toHex },
+                { property: 'isAutoStart', label: 'Auto started', type: 'checkbox' }
             ],
             2);
 
@@ -48,7 +52,34 @@ nanowasp.TapeSettings.prototype = {
         }
     },
     
-    _createForm: function(fields, width) {
+    _integerValidator: function(min, max) {
+        var validator = function (value) {
+            var base = null;
+            if (/^[0-9]+$/.test(value)) {
+                base = 10;
+            } else if (/^0x[0-9a-f]+$/i.test(value)) {
+                base = 16;
+            }
+            
+            if (base == null) {
+                return undefined;
+            }
+            
+            var result = parseInt(value, base);
+            
+            if (result >= min && result <= max) {
+                return result;
+            }
+            
+            return undefined;
+        };
+        
+        validator.message = "Enter a number between " + min + " and " + max + ".";
+        
+        return validator;
+    },
+    
+    _createForm: function(data, fields, width) {
         var form = document.createElement('form');
         var have_width = typeof(width) != 'undefined';
         var parent = form;
@@ -59,21 +90,49 @@ nanowasp.TapeSettings.prototype = {
                 form.appendChild(parent);
             }
             
-            parent.appendChild(this._createInput(fields[i]));
+            parent.appendChild(this._createInput(data, fields[i]));
         }
         
         return form;
     },
     
-    _createInput: function (field) {
+    _createInput: function (data, field) {
         var type = field.type;
         if (type == undefined) {
             type = 'text';
         }
         
         var input_el = document.createElement('input');
-        input_el.id = field.name;
         input_el.type = type;
+        
+        var renderer = field.renderer;
+        if (renderer == undefined) {
+            renderer = function (v) { return v; };
+        }
+        if (type == 'checkbox') {
+            input_el.checked = renderer(data[field.property]);
+        } else {
+            input_el.value = renderer(data[field.property]);
+        }
+        
+        var validator = field.validator;
+        if (validator == undefined) {
+            validator = function (v) { return v; };
+        }
+        input_el.onchange = function () {
+            var new_value;
+            if (type == 'checkbox') {
+                new_value = validator(input_el.checked);
+            } else {
+                new_value = validator(input_el.value);
+            }
+            if (new_value != undefined) {
+                data[field.property] = new_value;
+                label_el.className = "";
+            } else {
+                label_el.className = "invalid";
+            }
+        };
         
         var label_el = document.createElement('label');
         
