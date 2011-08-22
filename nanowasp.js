@@ -77,7 +77,7 @@ nanowasp.NanoWasp.prototype = {
         
         document.getElementById("tape_menuitem").addEventListener(
             "click", //"DOMActivate",
-            utils.bind0(this._toggle_tapes_menu, this),
+            utils.bind0(this._toggleTapesMenu, this),
             false);
         
         nanowasp.tapes = {};
@@ -120,56 +120,48 @@ nanowasp.NanoWasp.prototype = {
         microbee.start();
     },
     
-    _toggle_tapes_menu: function () {
+    _toggleTapesMenu: function () {
         var is_selected = utils.toggleHtmlClass("tape_menu", "selected");
         this._sendKeysToMicrobee = !is_selected;
     },
     
-    _hide_tapes_menu: function () {
+    _hideTapesMenu: function () {
         utils.removeHtmlClass("tape_menu", "selected");
         this._sendKeysToMicrobee = true;
     },
+    
+    _loadTape: function (tape) {
+        this.microbee.loadTape(tape);
+        var selected_tape_name = document.getElementById("selected_tape_name");
+        selected_tape_name.innerHTML = "";
+        selected_tape_name.appendChild(document.createTextNode(tape.name));
+    },
+
+    _onTapeSelected: function (tape) {
+        this._loadTape(tape);
+        this._hideTapesMenu();
+    },
+    
+    _onTapeEdited: function (tape) {
+        // Only reload the tape and update the UI if we're editing the
+        // currently selected tape.
+        if (this.microbee.currentTape == tape) {
+            this._loadTape(tape);
+        }
+    },
 
     _update_tapes: function () {    
+        var onTapeSelected = utils.bind0(this._onTapeSelected, this);
+        var onTapeEdited = utils.bind0(this._onTapeEdited, this);
+
         var tapeItems = document.createDocumentFragment();
+
         for (var name in nanowasp.tapes) {
             var li = document.createElement("li");
             li.className = "menuitem";
             
-            var span = document.createElement("span");
-            span.className = "link";
-            span.onclick = (function(name_, this_) {
-                return function () {
-                    this_.microbee.loadTape(nanowasp.tapes[name_]);
-                    var selected_tape_name = document.getElementById("selected_tape_name");
-                    selected_tape_name.innerHTML = "";
-                    selected_tape_name.appendChild(document.createTextNode(name_));
-                    this_._hide_tapes_menu();
-                };
-            })(name, this);
-            span.appendChild(document.createTextNode(name));
-            li.appendChild(span);
-            
-            var edit_span = document.createElement("span");
-            edit_span.className = "link right";
-            edit_span.onclick = (function(name_, li_, edit_span_) {
-                var settings = null;
-                
-                return function () {
-                    if (settings == null) {
-                        var tape = nanowasp.tapes[name_];
-                        settings = new nanowasp.TapeSettings(tape);
-                        settings.insertForm(li_);
-                        edit_span_.innerHTML = "done";
-                    } else {
-                        settings.removeForm();
-                        settings = null;
-                        edit_span_.innerHTML = "edit";
-                    }
-                };
-            })(name, li, edit_span);
-            edit_span.appendChild(document.createTextNode("edit"));
-            li.appendChild(edit_span);
+            // Reference to TapeView instance is maintained through the DOM
+            new nanowasp.TapeView(nanowasp.tapes[name], li, onTapeSelected, onTapeEdited);
             
             tapeItems.appendChild(li);
         }

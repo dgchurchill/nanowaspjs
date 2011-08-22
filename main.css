@@ -59,7 +59,7 @@ menu {
     float: right;
 }
 
-#controls li > div:first-child {
+#controls > li > div:first-child {
 	height: 1.2em;
 	line-height: 1.2em;
 	padding: 5px 10px;
@@ -69,7 +69,7 @@ menu {
     border-color: black;
 }
 
-#controls li.selected > div:first-child {
+#controls > li.selected > div:first-child {
     background-color: rgb(115, 193, 234);
     padding: 5px 9px;
     border-style: none solid solid solid;
@@ -170,6 +170,9 @@ th {
 	border: solid 1px black;
 }
 
+form {
+    margin-bottom: 5px;
+}
 
 form p {
     margin-top: 5px;

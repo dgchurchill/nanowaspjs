@@ -21,31 +21,68 @@
 var nanowasp = nanowasp || {};
 
 
-nanowasp.TapeSettings = function (tape) {
+nanowasp.TapeView = function (tape, parentBlockElement, onTapeSelected, onTapeEdited) {
     this._tape = tape;
+    this._parentBlockElement = parentBlockElement;
     this._form = null;
+    this._buildView(onTapeSelected, onTapeEdited);
 };
 
-nanowasp.TapeSettings.prototype = {
-    insertForm: function (parent) {
+nanowasp.TapeView.prototype = {
+    _buildView: function (onTapeSelected, onTapeEdited) {
+        var this_ = this;  // For closures
+        
+        this._nameSpan = document.createElement("span");
+        this._nameSpan.className = "link";
+        this._nameSpan.onclick = function () {
+            onTapeSelected(this_._tape);
+        };
+        this._nameSpan.appendChild(document.createTextNode(this._tape.name));
+        
+        var editDiv = document.createElement("div");
+        editDiv.className = "link right";
+        editDiv.onclick = function () {
+            if (this_._form == null) {
+                this_._insertForm(onTapeEdited);
+                editDiv.innerHTML = "done";
+            } else {
+                this_._removeForm();
+                editDiv.innerHTML = "edit";
+            }
+        };
+        editDiv.appendChild(document.createTextNode("edit"));
+
+        this._parentBlockElement.appendChild(editDiv);
+        this._parentBlockElement.appendChild(this._nameSpan);
+    },
+        
+    _insertForm: function (onTapeEdited) {
+        var this_ = this;
         var toHex = function (v) { return "0x" + v.toString(16); };
+        
+        var nameValidator = function (v) {
+            this_._nameSpan.innerHTML = "";
+            this_._nameSpan.appendChild(document.createTextNode(v));
+            return v;
+        };
         
         this._form = this._createForm(
             this._tape,
             [
-                { property: 'name', label: 'Name' },
+                { property: 'name', label: 'Name', validator: nameValidator },
                 { property: 'typeCode', label: 'Type code' },
                 { property: 'extra', label: 'Extra byte', validator: this._integerValidator(0, 0xFF), renderer: toHex },
                 { property: 'startAddress', label: 'Start address', validator: this._integerValidator(0, 0xFFFF), renderer: toHex },
                 { property: 'autoStartAddress', label: 'Auto start address', validator: this._integerValidator(0, 0xFFFF), renderer: toHex },
                 { property: 'isAutoStart', label: 'Auto started', type: 'checkbox' }
             ],
-            2);
+            2,
+            function () { onTapeEdited(this_._tape); });
 
-        parent.appendChild(this._form);
+        this._parentBlockElement.appendChild(this._form);
     },
     
-    removeForm: function () {
+    _removeForm: function () {
         if (this._form != null) {
             this._form.parentNode.removeChild(this._form);
             this._form = null;
@@ -79,7 +116,7 @@ nanowasp.TapeSettings.prototype = {
         return validator;
     },
     
-    _createForm: function(data, fields, width) {
+    _createForm: function(data, fields, width, onChange) {
         var form = document.createElement('form');
         var have_width = typeof(width) != 'undefined';
         var parent = form;
@@ -90,13 +127,13 @@ nanowasp.TapeSettings.prototype = {
                 form.appendChild(parent);
             }
             
-            parent.appendChild(this._createInput(data, fields[i]));
+            parent.appendChild(this._createInput(data, fields[i], onChange));
         }
         
         return form;
     },
     
-    _createInput: function (data, field) {
+    _createInput: function (data, field, onChange) {
         var type = field.type;
         if (type == undefined) {
             type = 'text';
@@ -129,6 +166,7 @@ nanowasp.TapeSettings.prototype = {
             if (new_value != undefined) {
                 data[field.property] = new_value;
                 label_el.className = "";
+                onChange();
             } else {
                 label_el.className = "invalid";
             }

@@ -64,6 +64,8 @@ nanowasp.MicroBee = function (graphicsContext, pressedKeys) {
         nanowasp.z80cpu.registerPortDevice(i, this._devices.memMapper);
     }
     
+    this.currentTape = null;
+    
     // Reset everything to get ready to start
     this.reset();
 };
@@ -148,5 +150,6 @@ nanowasp.MicroBee.prototype = {
     
     loadTape: function (tape) {
         this._devices.tapeInjector.loadTape(tape);
+        this.currentTape = tape;
     }
 };
