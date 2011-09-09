@@ -34,7 +34,7 @@ nanowasp.TapeInjector.prototype = {
      
     reset: function () {
         this._offset = 0;
-        this._z80cpu.setBreakpoint(this.LOCATION, utils.bind0(this._readByte, this));
+        this._z80cpu.setBreakpoint(this.LOCATION, utils.bind(this._readByte, this));
     },
     
     loadTape: function (tape) {

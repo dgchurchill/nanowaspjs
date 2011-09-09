@@ -77,7 +77,7 @@ nanowasp.NanoWasp.prototype = {
         
         document.getElementById("tape_menuitem").addEventListener(
             "click", //"DOMActivate",
-            utils.bind0(this._toggleTapesMenu, this),
+            utils.bind(this._toggleTapesMenu, this),
             false);
         
         nanowasp.tapes = {};
@@ -86,7 +86,7 @@ nanowasp.NanoWasp.prototype = {
         }
         
         var tapeFileInput = document.getElementById("tape_file");
-        var update_tapes = utils.bind0(this._update_tapes, this);
+        var update_tapes = utils.bind(this._update_tapes, this);
         tapeFileInput.onchange = function () {
             for (var i = 0; i < tapeFileInput.files.length; ++i) {
                 var file = tapeFileInput.files[i];
@@ -114,8 +114,8 @@ nanowasp.NanoWasp.prototype = {
         
         document.getElementById("reset_button").onclick = function () { microbee.reset(); };
         
-        window.onblur = utils.bind0(microbee.stop, microbee);
-        window.onfocus = utils.bind0(microbee.start, microbee);
+        window.onblur = utils.bind(microbee.stop, microbee);
+        window.onfocus = utils.bind(microbee.start, microbee);
     
         microbee.start();
     },
@@ -151,8 +151,8 @@ nanowasp.NanoWasp.prototype = {
     },
 
     _update_tapes: function () {    
-        var onTapeSelected = utils.bind0(this._onTapeSelected, this);
-        var onTapeEdited = utils.bind0(this._onTapeEdited, this);
+        var onTapeSelected = utils.bind(this._onTapeSelected, this);
+        var onTapeEdited = utils.bind(this._onTapeEdited, this);
 
         var tapeItems = document.createDocumentFragment();
 

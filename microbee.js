@@ -21,7 +21,7 @@ var nanowasp = nanowasp || {};
 
 nanowasp.MicroBee = function (graphicsContext, pressedKeys) {
     this._isRunning = false;
-    this._runSlice = utils.bind0(this._runSliceBody, this);
+    this._runSlice = utils.bind(this._runSliceBody, this);
     this._sliceDoneCallback = null;
     
     // Create the devices

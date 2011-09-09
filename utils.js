@@ -86,9 +86,8 @@ var utils = {
     
     // Missing feature implementation
     
-    /* Creates a function that calls func with this === target with no parameters. */
-    bind0: (function () {}).bind == undefined
-        ? function (func, target) { return function () { func.call(target); }; }
+    bind: (function () {}).bind == undefined
+        ? function (func, target) { return function () { func.apply(target, arguments); }; }
         : function (func, target) { return func.bind(target); },
                 
     makeUint8Array: typeof(Uint8Array) == "undefined"
