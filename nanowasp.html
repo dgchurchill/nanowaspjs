@@ -7,57 +7,173 @@
 </head>
 
 <body>
-<div style="position: relative; min-height: 100%; background-color: rgb(238, 206, 158);">
-
-<menu id="controls">
-    <li>
-        <div><a href="#VERSION#/help.html" target="org.nanowasp.help">Help</a></div>
-    </li>
-    <li>
-        <div><span id="reset_button" class="link">Reset</span></div>
-    </li>
-    <li id="tape_menu">
-        <div id="tape_menuitem">
-            <span class="link">Tape: <span id="selected_tape_name"></span></span>
-        </div>
-        <div class="dropdown">
-	        <menu id="tapes">
-	        </menu>
-	        <div class="menuitem last">
-	            Add files:<br />
-                <input id="tape_file" type="file" multiple></input>
-            </div>
-        </div>
-    </li>
-    
-    <li class="right">
-        <div><a href="#VERSION#/about.html" target="org.nanowasp.about">About</a></div>
-    </li>
-    <li class="right">
-        <div>Updated #UPDATE_DATE# (<a href="https://github.com/dgchurchill/nanowaspjs/commits/#VERSION#" target="_blank">#VERSION#</a>)</span></div>
-    </li>
-
-    <li style="float: none;"><div><!-- and a delicious center --></div></li>
-</menu>
-
-
-<!-- The folowing div ensures the page is tall enough to fit the monitor div.  -->
-<div style="height: 935px; position: relative;"></div>
-<div style="position: absolute; bottom: 0; width: 100%;">
-	<div style="width: 1000px; position: relative; margin: 0 auto;">
-	    <img src="#VERSION#/monitor.jpg" width="1000" height="897" style="display: block;" />
-	    
-	    <div style="width: 100%; position: absolute; top: 150px;">
-	        <div style="width:640px; margin: 0 auto;">
-	           <div id="error_message" style="display: none; position: relative; z-index: 1; background-color: rgb(238, 206, 158); padding: 10px;">
-	               Unfortunately your browser does not support some features required by NanoWasp.  Try
-	               updating your browser to the latest version.  <a href="http://www.google.com/chrome">Chrome</a> is
-	               recommended for best performance.
-	           </div>
-	           <canvas id="vdu" width="640" height="400" style="width: 640px; height: 450px;"></canvas>
+<div id="application">
+	<menu id="controls">
+	    <li>
+	        <div><a href="#documentation">Help</a></div>
+	    </li>
+	    <li>
+	        <div><span id="reset_button" class="link">Reset</span></div>
+	    </li>
+	    <li id="tape_menu">
+	        <div id="tape_menuitem">
+	            <span class="link">Tape: <span id="selected_tape_name"></span></span>
 	        </div>
-	    </div>
+	        <div class="dropdown">
+		        <menu id="tapes">
+		        </menu>
+		        <div class="menuitem last">
+		            Add files:<br />
+	                <input id="tape_file" type="file" multiple></input>
+	            </div>
+	        </div>
+	    </li>
+	    
+	    <li class="right">
+	        <div>Updated #UPDATE_DATE# (<a href="https://github.com/dgchurchill/nanowaspjs/commits/#VERSION#">#VERSION#</a>)</span></div>
+	    </li>
+	
+	    <li style="float: none;"><div><!-- and a delicious center --></div></li>
+	</menu>
+	
+	<div style="height: 935px;"><!--This div ensures the containing div is tall enough to fit the absolutely positioned monitor div. --></div>
+	<div style="position: absolute; bottom: 0; width: 100%;">
+		<div style="width: 1000px; position: relative; margin: 0 auto;">
+		    <img src="#VERSION#/monitor.jpg" width="1000" height="897" style="display: block;" />
+		    
+		    <div style="width: 100%; position: absolute; top: 150px;">
+		        <div style="width:640px; margin: 0 auto;">
+		           <div id="error_message" style="display: none;">
+		               Unfortunately your browser does not support some features required by NanoWasp.  Try
+		               updating your browser to the latest version.  <a href="http://www.google.com/chrome">Chrome</a> is
+		               recommended for best performance.
+		           </div>
+		           <canvas id="vdu" width="640" height="400" style="width: 640px; height: 450px;"></canvas>
+		        </div>
+		    </div>
+		</div>
 	</div>
+</div>
+
+<div id="documentation">
+<div class="content">
+
+<h1>About</h1>
+<p>
+NanoWasp is an emulator for the <a href="http://en.wikipedia.org/wiki/MicroBee">MicroBee</a> computer.
+The MicroBee was popular in Australia in the mid 1980s.
+NanoWasp requires a relatively recent browser with JavaScript enabled.
+</p>
+
+</div>
+
+<div class="content">
+
+<h1>Quick Start</h1>
+<ol>
+<li>Select a tape from the drop down list.</li>
+<li>Type "load" and press Return.</li>
+<li>Type "run" and press Return.</li>
+</ol>
+</div>
+
+<div class="content">
+<h1>Key Mapping</h1>
+<p>
+Most characters can be entered using the usual key (assuming you're using a Latin-script keyboard).
+However, punctuation characters are laid out differently on a MicroBee keyboard.
+The following table shows the mapping for these characters:
+</p>
+ 
+<table style="display: inline-table;">
+   <tr><th>Character</th><th>Key Sequence</th></tr>
+   <tr class="odd"><td>!</td><td>Shift-1</td></tr>
+   <tr><td>"</td><td>Shift-2</td></tr>
+   <tr class="odd"><td>#</td><td>Shift-3</td></tr>
+   <tr><td>$</td><td>Shift-4</td></tr>
+   <tr class="odd"><td>%</td><td>Shift-5</td></tr>
+   <tr><td>&amp;</td><td>Shift-6</td></tr>
+   <tr class="odd"><td>'</td><td>Shift-7</td></tr>
+   <tr><td>(</td><td>Shift-8</td></tr>
+   <tr class="odd"><td>)</td><td>Shift-9</td></tr>
+   <tr class="last"><td>Line Feed</td><td>PageDown</td></tr>
+</table>
+   
+<table style="display: inline-table;">
+   <tr><th>Character</th><th>Key Sequence</th></tr>
+   <tr class="odd"><td>:</td><td>;</td></tr>
+   <tr><td>*</td><td>Shift-;</td></tr>
+   <tr class="odd"><td>=</td><td>Shift--</td></tr>
+   <tr><td>^</td><td>`</td></tr>
+   <tr class="odd"><td>~</td><td>Shift-`</td></tr>
+   <tr><td>;</td><td>=</td></tr>
+   <tr class="odd"><td>+</td><td>Shift-=</td></tr>
+   <tr><td>@</td><td>'</td></tr>
+   <tr class="odd"><td>`</td><td>Shift-'</td></tr>
+   <tr class="last"><td>Break</td><td>End</td></tr>
+</table>
+
+</div>
+
+<div class="content">
+<h1>Acknowledgements</h1>
+
+<p>
+The Z80 CPU emulation code comes from <a href="http://matt.west.co.tt/">Matt Westcott's</a> 
+<a href="http://matt.west.co.tt/spectrum/jsspeccy/">JSSpeccy</a> project, a ZX Spectrum
+emulator written in JavaScript.  It was ported from the 
+<a href="http://fuse-emulator.sourceforge.net/">Fuse</a> project.
+Some ideas have also been incorporated from Stewart Kay's <a href="http://freshmeat.net/projects/ubee512">uBee512</a> emulator.
+Resources and feedback from the people at both the <a href="http://www.microbee-mspp.org.au/">MicroBee Software Preservation Project</a> and the <a href="http://microbee.com.au/shell/">Bee Board</a> 
+have been invaluable over the course of developing earlier versions of NanoWasp and the current JavaScript incarnation. 
+</p>
+
+</div>
+
+<div class="content">
+<h1>Original Software</h1>
+<p>
+The MicroWorld Basic V5.22e ROM and the MicroBee Font ROM are used on this site with
+kind permission from Ewan J. Wordsworth of Microbee Technology Pty Ltd.
+</p>
+
+<p>
+Some other original MicroBee software is also accessible through this site.
+This software is believed to be in the public domain or otherwise distributable.
+It is made available here non-commercially and solely to preserve this piece of Australian computing history.
+If you have any queries regarding the original software accessible though this site please contact me at the email address below.
+</p>
+</div>
+
+<div class="content">
+<h1>Source Code</h1>
+<p>
+The NanoWasp source code is released under the <a href="http://www.gnu.org/licenses/gpl-3.0.html">GPLv3 license</a>.
+The main Git repository can be found <a href="https://github.com/dgchurchill/nanowaspjs">here</a>.
+You may also be interested in the <a href="http://www.nanowasp.org/old/">old standalone version</a> and its
+<a href="http://www.sourceforge.net/projects/nanowasp/">SourceForge project page</a>.
+</p>
+
+</div>
+
+<div class="content">
+<img src="http://www.gravatar.com/avatar/8999d510cebee2fd094e0748a0f69370?s=100" width="100" height="100" class="float-left" />
+<h1>Contact</h1>
+<p>NanoWasp was written by Dave Churchill.
+Please send any feedback to <a href="mailto:nanowasp@ninthcuriosity.com">nanowasp@ninthcuriosity.com</a>.</p>
+
+</div>
+
+<div class="content">
+<h1>Privacy</h1>
+<p>
+No personally identifiable information is collected by this site.
+However, cookies are used to gather anonymous usage statistics via Google Analytics.
+Information about privacy with regard to Google Analytics can be found
+ <a href="http://www.google.com/intl/en/analytics/privacyoverview.html">here</a>.
+Additionally, like most websites, the IP address of the device you use to access the site may be recorded.
+</p>
+
 </div>
 
 </div>
