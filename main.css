@@ -10,6 +10,7 @@ html, body {
 body {
     background-color: rgb(40%, 40%, 60%);
     font-family: 'Inconsolata', helvetica, sans-serif;
+    line-height: 1.3em;
     min-width: 1000px;
 }
 
@@ -39,11 +40,15 @@ a:hover, .link:hover {
     border-bottom: solid black 1px;
 }
 
-#error_message {
+.error {
     position: relative;
     z-index: 1;
+    width: 500px;
+    padding: 30px 50px;
     background-color: rgb(238, 206, 158);
-    padding: 10px;
+    margin: 30px auto; 
+    text-align: justify;
+    border: solid black 1px;
 }
 
 #controls {
@@ -131,7 +136,6 @@ menu {
     overflow: auto; 
     text-align: justify;
     border: solid black 1px;
-    line-height: 1.3em;
 }
 
 .content h1 {

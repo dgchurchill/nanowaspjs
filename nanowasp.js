@@ -192,6 +192,11 @@ window.onload = function () {
         }
         
         // Hopefully at least this will work...
-        document.getElementById("error_message").style.display = "block";
+        var error_message_el = document.getElementById("error_message");
+        error_message_el.innerHTML =
+            "Unfortunately your browser does not support some features required by NanoWasp. " +
+            "Try updating your browser to the latest version. " +
+            "<a href=\"http://www.google.com/chrome\">Chrome</a> is recommended for best performance.";
+        error_message_el.style.display = "block";
     }
 };
