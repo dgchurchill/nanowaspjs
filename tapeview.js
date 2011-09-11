@@ -71,9 +71,9 @@ nanowasp.TapeView.prototype = {
             [
                 { property: 'name', label: 'Name', validator: nameValidator },
                 { property: 'typeCode', label: 'Type code' },
-                { property: 'extra', label: 'Extra byte', validator: this._integerValidator(0, 0xFF), renderer: toHex },
-                { property: 'startAddress', label: 'Start address', validator: this._integerValidator(0, 0xFFFF), renderer: toHex },
-                { property: 'autoStartAddress', label: 'Auto start address', validator: this._integerValidator(0, 0xFFFF), renderer: toHex },
+                { property: 'extra', label: 'Spare byte', validator: this._integerValidator(0, 0xFF), renderer: toHex },
+                { property: 'startAddress', label: 'Load address', validator: this._integerValidator(0, 0xFFFF), renderer: toHex },
+                { property: 'autoStartAddress', label: 'Start address', validator: this._integerValidator(0, 0xFFFF), renderer: toHex },
                 { property: 'isAutoStart', label: 'Auto started', type: 'checkbox' }
             ],
             2,

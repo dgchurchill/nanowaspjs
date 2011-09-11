@@ -143,11 +143,9 @@ nanowasp.NanoWasp.prototype = {
     },
     
     _onTapeEdited: function (tape) {
-        // Only reload the tape and update the UI if we're editing the
-        // currently selected tape.
-        if (this.microbee.currentTape == tape) {
-            this._loadTape(tape);
-        }
+        // Editing a tape causes it to be selected and rewound because
+        // the user most probably wants to load it after editing it.
+        this._loadTape(tape);
     },
 
     _update_tapes: function () {    
