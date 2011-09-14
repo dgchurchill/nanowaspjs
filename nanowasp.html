@@ -54,7 +54,11 @@
 		    <img src="#VERSION#/monitor.jpg" width="1000" height="897" style="display: block;" />
 		    
 		    <div style="width: 100%; position: absolute; top: 150px;">
-		        <div style="width:640px; margin: 0 auto;">
+		        <div style="width:640px; position: relative; margin: 0 auto;">
+                   <div id="debugger" style="position: absolute; z-index: 1; left: 640px;">
+                      <pre id="registers"></pre>
+                   </div>
+		        
 		           <div id="error_message" class="error" style="display: none;"></div>
 		           <noscript>
                       <div class="error">NanoWasp relies on JavaScript. Please enable JavaScript if it's disabled, or switch to a browser that supports JavaScript.</div>    

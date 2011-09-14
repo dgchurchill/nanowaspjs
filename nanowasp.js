@@ -112,6 +112,11 @@ nanowasp.NanoWasp.prototype = {
         
         this._update_tapes();
         
+        var debug = new nanowasp.Debugger("registers");
+        microbee.setSliceDoneCallback(function() {
+            debug.update(); 
+        });
+        
         document.getElementById("reset_button").onclick = function () { microbee.reset(); };
         
         window.onblur = utils.bind(microbee.stop, microbee);
