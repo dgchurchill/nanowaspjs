@@ -43,6 +43,7 @@ nanowasp.MicroBee = function (graphicsContext, pressedKeys) {
     this._devices.tapeInjector = new nanowasp.TapeInjector(this._devices.z80);
     
     this._runnables = [this._devices.z80, this._devices.crtc];
+    this._runningDevice = null;
 
     // Connect the devices
     var roms = [ this._devices.rom1, this._devices.rom2, this._devices.rom3 ];
@@ -103,13 +104,14 @@ nanowasp.MicroBee.prototype = {
         var nextMicros = this.MAX_MICROS_TO_RUN;
         
         for (var i in this._runnables) {
-            var device = this._runnables[i];
-            var deviceNextMicros = device.execute(this._emulationTime, this._microsToRun);
+            this._runningDevice = this._runnables[i];
+            var deviceNextMicros = this._runningDevice.execute(this._emulationTime, this._microsToRun);
             if (deviceNextMicros != 0) {
                 nextMicros = Math.min(nextMicros, deviceNextMicros);
             }
         }
         
+        this._runningDevice = null;
         this._emulationTime += this._microsToRun;
         this._microsToRun = nextMicros;
 
@@ -127,7 +129,10 @@ nanowasp.MicroBee.prototype = {
     },
     
     getTime: function () {
-        // TODO: This doesn't match the original C++ implementation. May only matter for FDC emulation?
+        if (this._runningDevice != null) {
+            return this._emulationTime + this._runningDevice.getCurrentExecutionTime();
+        }
+        
         return this._emulationTime;
     },
     

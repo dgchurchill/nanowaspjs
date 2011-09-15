@@ -123,6 +123,10 @@ nanowasp.Z80Cpu.prototype = {
         return 0;  // Execute again as soon as possible.
     },
     
+    getCurrentExecutionTime: function () {
+        return tstates * 1000000 / this.FREQUENCY_HZ;
+    },
+    
     setBreakpoint: function (address, handler) {
         z80_set_breakpoint(address, handler);
     },
