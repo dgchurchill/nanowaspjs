@@ -112,11 +112,9 @@ nanowasp.NanoWasp.prototype = {
         
         this._update_tapes();
         
-        var debug = new nanowasp.Debugger("registers");
-        microbee.setSliceDoneCallback(function() {
-            debug.update(); 
-        });
-        
+        this._debugger = new nanowasp.Debugger("registers");
+        document.getElementById("debugger_button").onclick = utils.bind(this._show_debugger, this);
+
         document.getElementById("reset_button").onclick = function () { microbee.reset(); };
         
         window.onblur = utils.bind(microbee.stop, microbee);
@@ -172,6 +170,26 @@ nanowasp.NanoWasp.prototype = {
         var tapesMenu = document.getElementById("tapes");
         tapesMenu.innerHTML = "";
         tapesMenu.appendChild(tapeItems);
+    },
+    
+    _show_debugger: function () {
+        var debug = this._debugger;
+        debug.update();
+        utils.removeHtmlClass("debugger", "hidden");
+        this.microbee.setSliceDoneCallback(function() {
+            debug.update(); 
+        });
+        var button = document.getElementById("debugger_button");
+        button.innerText = "Hide Debugger";
+        button.onclick = utils.bind(this._hide_debugger, this);
+    },
+    
+    _hide_debugger: function () {
+        utils.addHtmlClass("debugger", "hidden");
+        this.microbee.setSliceDoneCallback(null);
+        var button = document.getElementById("debugger_button");
+        button.innerText = "Show Debugger";
+        button.onclick = utils.bind(this._show_debugger, this);
     }
 };
 

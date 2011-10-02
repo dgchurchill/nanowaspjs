@@ -27,6 +27,9 @@
 	    <li>
 	        <div><span id="reset_button" class="link">Reset</span></div>
 	    </li>
+	    <li>
+	        <div><span id="debugger_button" class="link">Show Debugger</span></div>
+	    </li>
 	    <li id="tape_menu">
 	        <div id="tape_menuitem">
 	            <span class="link">Tape: <span id="selected_tape_name"></span></span>
@@ -55,7 +58,7 @@
 		    
 		    <div style="width: 100%; position: absolute; top: 150px;">
 		        <div style="width:640px; position: relative; margin: 0 auto;">
-                   <div id="debugger" style="position: absolute; z-index: 1; left: 640px;">
+                   <div id="debugger" class="hidden" style="position: absolute; z-index: 1; left: 640px;">
                       <pre id="registers"></pre>
                    </div>
 		        

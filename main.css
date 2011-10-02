@@ -221,3 +221,7 @@ input[type="checkbox"] {
 .right {
 	float: right;
 }
+
+.hidden {
+    display: none;
+}
