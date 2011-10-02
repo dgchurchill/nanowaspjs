@@ -3,3 +3,4 @@
 !z80.jscpp
 !z80_macros.jscpp
 !z80_ops.jscpp
+!disassembler.js
