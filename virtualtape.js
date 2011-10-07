@@ -41,20 +41,32 @@ nanowasp.VirtualTape = function (name, data, typeCode, startAddress, autoStartAd
 };
 
 nanowasp.VirtualTape.createAutoTape = function (name, data) {
-    if (/\.mac$/.test(name)) {
-        return nanowasp.VirtualTape.createMacTape(name, data);
-    } else {
-        return nanowasp.VirtualTape.createMwbTape(name, data);
+    var tapeTypes = {
+        default_: ['B', 0x08C0, 0x0000, false, 0x47],  // 0x47 extra byte temporary set here, for frank.mwb
+        bee: ['M', 0x0900, 0x0900, true, 0x00],
+        bin: ['M', 0x0900, 0x0900, true, 0x00],
+        z80: ['M', 0x0900, 0x0900, true, 0x00],
+        com: ['M', 0x0100, 0x0100, true, 0x00],
+        asm: ['S', 0x1000, 0x0000, false, 0x00],
+        edt: ['S', 0x1000, 0x0000, false, 0x00],
+        mac: ['S', 0x1000, 0x0000, false, 0x00],
+        pas: ['S', 0x1000, 0x0000, false, 0x00],
+        txt: ['S', 0x1000, 0x0000, false, 0x00],
+        wbf: ['W', 0x0900, 0x0000, false, 0x00]
+    };
+    
+    var tapeParameters = tapeTypes.default_;
+    
+    var match = name.match(/\.(...)$/);
+    if (match != null) {
+        var extension = match[1].toLowerCase();
+        if (extension in tapeTypes) {
+            tapeParameters = tapeTypes[extension];
+        }
     }
-};
-
-nanowasp.VirtualTape.createMwbTape = function (name, data) {
-    var extra = 0x47;  // temporary, for frank.mwb
-    return new nanowasp.VirtualTape(name, data, 'B', 0x08C0, 0x0000, false, extra);
-};
-
-nanowasp.VirtualTape.createMacTape = function (name, data) {
-    return new nanowasp.VirtualTape(name, data, 'M', 0x0900, 0x0900, true, 0x00);    
+    
+    var p = tapeParameters;
+    return new nanowasp.VirtualTape(name, data, p[0], p[1], p[2], p[3], p[4]);
 };
 
 nanowasp.VirtualTape.prototype = {
