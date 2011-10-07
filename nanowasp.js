@@ -180,7 +180,7 @@ nanowasp.NanoWasp.prototype = {
             debug.update(); 
         });
         var button = document.getElementById("debugger_button");
-        button.innerText = "Hide Debugger";
+        utils.setTextContent(button, "Hide Debugger");
         button.onclick = utils.bind(this._hide_debugger, this);
     },
     
@@ -188,7 +188,7 @@ nanowasp.NanoWasp.prototype = {
         utils.addHtmlClass("debugger", "hidden");
         this.microbee.setSliceDoneCallback(null);
         var button = document.getElementById("debugger_button");
-        button.innerText = "Show Debugger";
+        utils.setTextContent(button, "Show Debugger");
         button.onclick = utils.bind(this._show_debugger, this);
     }
 };

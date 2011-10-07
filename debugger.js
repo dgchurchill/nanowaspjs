@@ -26,7 +26,7 @@ nanowasp.Debugger = function (registersElementName) {
 
 nanowasp.Debugger.prototype = {
     update: function () {
-        this._registersElement.innerText =
+        utils.setTextContent(this._registersElement,
             "PC: " + this._formatHex(z80.pc, 4) + "  " +
             "SP: " + this._formatHex(z80.sp, 4) + "\n" +
             "AF: " + this._formatHex(z80.a, 2) + this._formatHex(z80.f, 2) + "  " +
@@ -36,7 +36,7 @@ nanowasp.Debugger.prototype = {
             "IX: " + this._formatHex(z80.ixh, 2) + this._formatHex(z80.ixl, 2) + "  " +
             "IY: " + this._formatHex(z80.iyh, 2) + this._formatHex(z80.iyl, 2) + "\n" +
             "\n" +
-            disassemble(z80.pc, 5);
+            disassemble(z80.pc, 5));
     },
     
     _formatHex: function (data, length) {

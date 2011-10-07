@@ -84,6 +84,11 @@ var utils = {
         return !wasActive;
     },
     
+    setTextContent: function (element, text) {
+        element.innerHTML = "";
+        element.appendChild(document.createTextNode(text));
+    },
+    
     // Missing feature implementation
     
     bind: (function () {}).bind == undefined
