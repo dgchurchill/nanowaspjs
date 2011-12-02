@@ -10,12 +10,12 @@ html, body {
 body {
     background-color: rgb(40%, 40%, 60%);
     font-family: 'Inconsolata', helvetica, sans-serif;
-    line-height: 1.3em;
+    line-height: 1.4em;
     min-width: 1000px;
 }
 
 p {
-	margin-top: 2em;
+	margin-top: 1.2em;
 }
 
 ul {
@@ -139,7 +139,6 @@ menu {
     background-color: rgb(238, 206, 158);
     margin: 30px auto; 
     overflow: auto; 
-    text-align: justify;
     border: solid black 1px;
 }
 
