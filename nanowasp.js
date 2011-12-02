@@ -59,22 +59,16 @@ nanowasp.NanoWasp.prototype = {
             pressedKeys[event.keyCode] = false;
             return false;
         };
+        
+        document.getElementById("hide_notice_button").onclick = function () {
+            document.getElementById("notice").style.display = "none";
+        };
     
         var graphicsContext = document.getElementById("vdu").getContext('2d');
         
         this.microbee = new nanowasp.MicroBee(graphicsContext, pressedKeys);
         var microbee = this.microbee;
-    
-        /*
-        var states = [
-            [ "island", "Shipwreck Island"],
-            [ "basic", "BASIC"],
-            [ "shell", "Shell"]
-        ];
-        
-        microbee.restoreState(nanowasp.data[states[stateSelector.selectedIndex][0]]);
-        */
-        
+            
         document.getElementById("tape_menuitem").addEventListener(
             "click", //"DOMActivate",
             utils.bind(this._toggleTapesMenu, this),
