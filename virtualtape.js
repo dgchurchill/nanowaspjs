@@ -23,26 +23,40 @@
 
 var nanowasp = nanowasp || {};
 
-nanowasp.VirtualTape = function (name, data, typeCode, startAddress, autoStartAddress, isAutoStart, extra) {
-    if (data.length > 0xFFFF) {
-        throw {
-            name: "ArgumentError",
-            message: "'data' must be less than 64k in size."
-        };
+nanowasp.VirtualTape = function (title, filename, urlOrData, tapeParameters) {
+    if (typeof(urlOrData) == "string")
+    {
+        this.url = urlOrData;
+    }
+    else
+    {
+        if (urlOrData.length > 0xFFFF) {
+            throw {
+                name: "ArgumentError",
+                message: "'urlOrData' must be less than 64k in size."
+            };
+        }
+        
+        this.data = urlOrData;
     }
     
-    this.name = name;
-    this.data = data;
-    this.typeCode = typeCode;
-    this.startAddress = startAddress;
-    this.autoStartAddress = autoStartAddress;
-    this.isAutoStart = isAutoStart;
-    this.extra = extra;
+    this.title = title;
+    this.filename = filename;
+    
+    if (tapeParameters == null) {
+        tapeParameters = nanowasp.VirtualTape.getDefaultParameters(filename);
+    }
+    
+    this.typeCode = tapeParameters[0];
+    this.startAddress = tapeParameters[1];
+    this.autoStartAddress = tapeParameters[2];
+    this.isAutoStart = tapeParameters[3];
+    this.extra = tapeParameters[4];
 };
 
-nanowasp.VirtualTape.createAutoTape = function (name, data) {
+nanowasp.VirtualTape.getDefaultParameters = function (filename) {
     var tapeTypes = {
-        default_: ['B', 0x08C0, 0x0000, false, 0x47],  // 0x47 extra byte temporary set here, for frank.mwb
+        default_: ['B', 0x08C0, 0x0000, false, 0x00],
         bee: ['M', 0x0900, 0x0900, true, 0x00],
         bin: ['M', 0x0900, 0x0900, true, 0x00],
         z80: ['M', 0x0900, 0x0900, true, 0x00],
@@ -57,7 +71,7 @@ nanowasp.VirtualTape.createAutoTape = function (name, data) {
     
     var tapeParameters = tapeTypes.default_;
     
-    var match = name.match(/\.(...)$/);
+    var match = filename.match(/\.(...)$/);
     if (match != null) {
         var extension = match[1].toLowerCase();
         if (extension in tapeTypes) {
@@ -65,13 +79,52 @@ nanowasp.VirtualTape.createAutoTape = function (name, data) {
         }
     }
     
-    var p = tapeParameters;
-    return new nanowasp.VirtualTape(name, data, p[0], p[1], p[2], p[3], p[4]);
+    return tapeParameters;
+};
+
+nanowasp.VirtualTape.loadFromUrl = function (url) {
+    var request = new XMLHttpRequest();
+    request.open('GET', url);
+    request.onreadystatechange = function () {
+        if (request.readyState == 4) {  
+            if (request.status == 200) {
+              console.log(request.responseText);
+            } else {
+              console.log('Error', request.statusText);
+            }
+        }
+    };
+    request.send(null);
 };
 
 nanowasp.VirtualTape.prototype = {
-    // Returns a byte array containing the data as it would be stored on tape (i.e. including tape header and checksummed blocks).
-    getFormattedData: function () {
+    // Asynchronously gets a byte array containing the data as it would be stored
+    // on tape (i.e. including tape header and checksummed blocks).  On success, the
+    // onSuccess function will be called with the first parameter set to the result.
+    // If an error occurs then onError will be called with its first parameter
+    // set to the tape.  onSuccess may be called immediately from within this method
+    // if the data is already available.
+    //
+    // Returns an XMLHttpRequest object which can be used to abort or check the status
+    // of the request.
+    getFormattedData: function (onSuccess, onError) {
+        if (this.data != null) {
+            onSuccess(this._formatData());
+        }
+        
+        var this_ = this;
+        return utils.ajaxGetBinary(
+            this.url,
+            function (data) {
+                this_.data = data;
+                onSuccess(this_._formatData());
+            },
+            function (request) {
+                onError(this_);
+            })
+    },
+
+    _formatData: function () {
         var headerLength = 40 + 1 + 16 + 1;
         var blockSize = 256;
         var fullBlockCount = Math.floor(this.data.length / blockSize);
@@ -96,8 +149,8 @@ nanowasp.VirtualTape.prototype = {
         stream.clearChecksum8();
         
         for (var i = 0; i < 6; ++i) {
-            if (i < this.name.length) {
-                stream.write(this.name.charCodeAt(i));
+            if (i < this.filename.length) {
+                stream.write(this.filename.charCodeAt(i));
             } else {
                 stream.write(' '.charCodeAt(0));
             }

@@ -153,8 +153,16 @@ nanowasp.MicroBee.prototype = {
         return this._isRunning;
     },
     
-    loadTape: function (tape) {
-        this._devices.tapeInjector.loadTape(tape);
-        this.currentTape = tape;
+    loadTape: function (tape, onSuccess, onError) {
+        var this_ = this;
+        return tape.getFormattedData(
+            function (data) {
+                this_._devices.tapeInjector.setData(data);
+                this_.currentTape = tape;
+                onSuccess(tape);
+            },
+            function (request) {
+                onError(tape, request);
+            });
     }
 };

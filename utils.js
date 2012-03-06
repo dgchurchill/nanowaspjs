@@ -163,6 +163,35 @@ var utils = {
         return result;
     },
     
+    // XMLHttpRequest
+    
+    ajaxGetBinary: function (url, onSuccess, onError) {
+        var request = new XMLHttpRequest();
+        request.open('GET', url, true);
+        request.overrideMimeType('text/plain; charset=x-user-defined');
+        
+        request.onreadystatechange = function () {
+            if (request.readyState == 4) {  
+                if (request.status == 200) {
+                    var response = request.responseText;
+                    var buffer = utils.makeUint8Array(response.length);
+                    for (var i = 0; i < response.length; ++i) {
+                        buffer[i] = response.charCodeAt(i) & 0xff;
+                    }
+                    onSuccess(buffer);
+                } else {
+                    onError(request);
+                }
+            }
+        };
+        
+        request.send(null);
+        
+        return request;
+    },
+    
+    // Other
+    
     listsMatch: function (l1, l2) {
         if (l1.length != l2.length) {
             return false;

@@ -14,20 +14,18 @@ UPDATE_DATE=$(shell date "+%Y-%m-%d")
 
 OBJDIR=$(OUTPUTDIR)/objs
 COREDIR=$(OUTPUTDIR)/$(VERSION)
+SOFTWAREDIR=$(OUTPUTDIR)/software
 
 NANOWASP_JS=nanowasp.js crtc.js crtcmemory.js keyboard.js latchrom.js memmapper.js memory.js \
             microbee.js utils.js z80cpu.js virtualtape.js tapeinjector.js tapeview.js \
-            debugger.js z80/disassembler_dicts.js z80/disassembler.js
+            software.js debugger.js z80/disassembler_dicts.js z80/disassembler.js
 Z80_JS=z80/z80_full.js z80/z80_ops_full.js
 
 ROMS=$(wildcard data/roms/*.rom)
 ROMS_JS=$(ROMS:data/roms/%.rom=$(OBJDIR)/%.js)
 
-MWBS=$(wildcard data/mwb/*.mwb)
-MWBS_JS=$(MWBS:data/mwb/%.mwb=$(OBJDIR)/%.js)
-
-MACS=$(wildcard data/bee/*.bee)
-MACS_JS=$(MACS:data/bee/%.bee=$(OBJDIR)/%.js)
+SOFTWARE_IN=$(wildcard data/software/*)
+SOFTWARE=$(SOFTWARE_IN:data/software/%=$(SOFTWAREDIR)/%)
 
 HTML=$(OUTPUTDIR)/index.html $(OUTPUTDIR)/maintenance.html $(COREDIR)/main.css
 JAVASCRIPT=$(COREDIR)/nanowasp.js $(COREDIR)/z80.js $(COREDIR)/data.js
@@ -35,7 +33,7 @@ IMAGES=$(COREDIR)/monitor.jpg
 HTACCESS=$(COREDIR)/.htaccess
 
 .PHONY: nanowasp
-nanowasp: $(HTML) $(JAVASCRIPT) $(IMAGES) $(HTACCESS)
+nanowasp: $(HTML) $(JAVASCRIPT) $(IMAGES) $(SOFTWARE) $(HTACCESS)
 
 # Used as a dependency for targets that should always be built (e.g. targets that need to update if $(VERSION) changes).
 .PHONY: force_build
@@ -57,6 +55,9 @@ $(COREDIR)/main.css: main.css | $(COREDIR)
 $(IMAGES): $(COREDIR)/%: images/% | $(COREDIR)
 	cp $< $@
 
+$(SOFTWARE): $(SOFTWAREDIR)/%: data/software/% | $(SOFTWAREDIR)
+	cp $< $@
+
 $(COREDIR)/nanowasp.js: $(NANOWASP_JS) | $(COREDIR)
 	cat $(NANOWASP_JS) | $(YUI) > $@
 	gzip -c $@ > $@.gz
@@ -69,23 +70,14 @@ $(COREDIR)/data.js: $(OBJDIR)/nanowasp-data.js | $(COREDIR)
 	cat $< | $(YUI) > $@
 	gzip -c $@ > $@.gz
 
-$(OBJDIR)/nanowasp-data.js: $(ROMS_JS) $(MWBS_JS) $(MACS_JS) | $(OBJDIR)
+$(OBJDIR)/nanowasp-data.js: $(ROMS_JS) | $(OBJDIR)
 	echo "var nanowasp = nanowasp || {};" > $@
 	echo "nanowasp.data = {};" >> $@
 	echo "nanowasp.data.roms = {};" >> $@
 	cat $(ROMS_JS:%="%") >> $@
-	echo "nanowasp.data.mwbs = {};" >> $@
-	cat $(MACS_JS:%="%") >> $@
-	cat $(MWBS_JS:%="%") >> $@
 
 $(OBJDIR)/%.js: data/roms/%.rom | $(OBJDIR)
 	echo "nanowasp.data.roms['$*'] = \"$$(openssl base64 -in "$<" | sed -e "$$ ! s/$$/\\\\/")\";" > "$@"
-
-$(OBJDIR)/%.js: data/mwb/%.mwb | $(OBJDIR)
-	echo "nanowasp.data.mwbs['$*.mwb'] = \"$$(openssl base64 -in "$<" | sed -e "$$ ! s/$$/\\\\/")\";" > "$@"
-
-$(OBJDIR)/%.js: data/bee/%.bee | $(OBJDIR)
-	echo "nanowasp.data.mwbs['$*.bee'] = \"$$(openssl base64 -in "$<" | sed -e "$$ ! s/$$/\\\\/")\";" > "$@"
 
 
 .PHONY: z80
@@ -99,4 +91,7 @@ $(OBJDIR):
 	mkdir -p $@
 
 $(COREDIR):
+	mkdir -p $@
+
+$(SOFTWAREDIR):
 	mkdir -p $@

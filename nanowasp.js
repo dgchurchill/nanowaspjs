@@ -74,9 +74,10 @@ nanowasp.NanoWasp.prototype = {
             utils.bind(this._toggleTapesMenu, this),
             false);
         
-        nanowasp.tapes = {};
-        for (var name in nanowasp.data.mwbs) {
-            nanowasp.tapes[name] = nanowasp.VirtualTape.createAutoTape(name, utils.decodeBase64(nanowasp.data.mwbs[name]));
+        nanowasp.tapes = [];
+        for (var i = 0; i < nanowasp.software.length; ++i) {
+            var info = nanowasp.software[i];
+            nanowasp.tapes.push(new nanowasp.VirtualTape(info.title, info.filename, info.url, info.tapeParameters));
         }
         
         var tapeFileInput = document.getElementById("tape_file");
@@ -128,7 +129,22 @@ nanowasp.NanoWasp.prototype = {
     },
     
     _loadTape: function (tape) {
-        this.microbee.loadTape(tape);
+        if (this._tapeLoadRequest != null) {
+            this._tapeLoadRequest.abort();
+        }
+
+        var this_ = this;
+        this._tapeLoadRequest = this.microbee.loadTape(
+            tape,
+            function () {
+                console.log("tape load succeeded");
+                this_._tapeLoadRequest = null;
+            },
+            function () {
+                console.log("tape load failed");
+                this_._tapeLoadRequest = null;
+            });
+        
         var selected_tape_name = document.getElementById("selected_tape_name");
         selected_tape_name.innerHTML = "";
         selected_tape_name.appendChild(document.createTextNode(tape.name));
