@@ -19,6 +19,19 @@
 
 var nanowasp = nanowasp || {};
 
+nanowasp.showErrorHtml = function (html) {
+    var error_message = document.getElementById("error_message");
+    error_message.innerHTML = html;
+    document.getElementById("error").style.display = "block";
+};
+
+nanowasp.showError = function (text) {
+    var error_message = document.getElementById("error_message");
+    error_message.innerHTML = "";
+    error_message.appendChild(document.createTextNode((new Date()).toLocaleTimeString() + " - " + text));
+    document.getElementById("error").style.display = "block";
+}
+
 nanowasp.NanoWasp = function () {
     this._sendKeysToMicrobee = true;
 };
@@ -64,6 +77,10 @@ nanowasp.NanoWasp.prototype = {
             document.getElementById("notice").style.display = "none";
         };
     
+        document.getElementById("hide_error_button").onclick = function () {
+            document.getElementById("error").style.display = "none";
+        };
+
         var graphicsContext = document.getElementById("vdu").getContext('2d');
         
         this.microbee = new nanowasp.MicroBee(graphicsContext, pressedKeys);
@@ -137,17 +154,20 @@ nanowasp.NanoWasp.prototype = {
         this._tapeLoadRequest = this.microbee.loadTape(
             tape,
             function () {
-                console.log("tape load succeeded");
+                document.getElementById("tape_loading").style.display = "none";
                 this_._tapeLoadRequest = null;
             },
-            function () {
-                console.log("tape load failed");
+            function (tape, request) {
+                nanowasp.showError("Tape failed to load (" + request.status + " " + request.statusText + ")");
+                console.log(arguments);
+                document.getElementById("tape_loading").style.display = "none";
                 this_._tapeLoadRequest = null;
             });
         
         var selected_tape_name = document.getElementById("selected_tape_name");
         selected_tape_name.innerHTML = "";
-        selected_tape_name.appendChild(document.createTextNode(tape.name));
+        selected_tape_name.appendChild(document.createTextNode(tape.title));
+        document.getElementById("tape_loading").style.display = "inline";
     },
 
     _onTapeSelected: function (tape) {
@@ -223,11 +243,9 @@ window.onload = function () {
         }
         
         // Hopefully at least this will work...
-        var error_message_el = document.getElementById("error_message");
-        error_message_el.innerHTML =
+        nanowasp.showErrorHtml(
             "Unfortunately your browser does not support some features required by NanoWasp. " +
             "Try updating your browser to the latest version. " +
-            "<a href=\"http://www.google.com/chrome\">Chrome</a> is recommended for best performance.";
-        error_message_el.style.display = "block";
+            "<a href=\"http://www.google.com/chrome\">Chrome</a> is recommended for best performance.");
     }
 };

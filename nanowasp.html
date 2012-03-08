@@ -32,7 +32,7 @@
 	    </li>
 	    <li id="tape_menu">
 	        <div id="tape_menuitem">
-	            <span class="link">Tape: <span id="selected_tape_name"></span></span>
+	            <span class="link">Tape: <span id="selected_tape_name"></span> <span id="tape_loading" style="display: none;">loading...</span></span>
 	        </div>
 	        <div class="dropdown">
 		        <menu id="tapes">
@@ -62,7 +62,6 @@
                       <pre id="registers"></pre>
                    </div>
 		        
-		           <div id="error_message" class="error" style="display: none;"></div>
 		           <noscript>
                       <div class="error">NanoWasp relies on JavaScript. Please enable JavaScript if it's disabled, or switch to a browser that supports JavaScript.</div>    
                    </noscript>
@@ -199,9 +198,15 @@ Additionally, like most websites, the IP address of the device you use to access
 
 </div>
 
-<div id="notice" style="position: fixed; left: 0; right: 0; bottom: 0; background: beige; border-top: solid 1px black; padding: 15px; text-align: center;">
-<div style="float: right; margin-right: 15px"><span id="hide_notice_button" class="link">x</a></div>
-<a href="http://www.microbeetechnology.com.au/">Microbee Technology</a> has announced a new <a href="http://www.microbeetechnology.com.au/premiumpluskit.htm">Microbee Premium Plus kit</a>!
+<div id="messages" style="position: fixed; left: 0; right: 0; bottom: 0;">
+	<div id="error" style="background: #ff8080; color: #300000; border-top: solid 1px black; padding: 15px; display: none;">
+		<div style="float: right; margin-right: 15px"><span id="hide_error_button" class="link" style="color: #C00000; font-weight: bold;">x</a></div>
+		<div id="error_message" style="margin: 0 50px"></div>
+	</div>
+	<div id="notice" style="background: beige; border-top: solid 1px black; padding: 15px; text-align: center;">
+		<div style="float: right; margin-right: 15px"><span id="hide_notice_button" class="link" style="font-weight: bold;">x</a></div>
+		<a href="http://www.microbeetechnology.com.au/">Microbee Technology</a> has announced a new <a href="http://www.microbeetechnology.com.au/premiumpluskit.htm">Microbee Premium Plus kit</a>!
+	</div>
 </div>
 
 <script src="#VERSION#/nanowasp.js"></script>

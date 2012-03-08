@@ -24,8 +24,7 @@ Z80_JS=z80/z80_full.js z80/z80_ops_full.js
 ROMS=$(wildcard data/roms/*.rom)
 ROMS_JS=$(ROMS:data/roms/%.rom=$(OBJDIR)/%.js)
 
-SOFTWARE_IN=$(wildcard data/software/*)
-SOFTWARE=$(SOFTWARE_IN:data/software/%=$(SOFTWAREDIR)/%)
+SOFTWARE_IN=data/software/
 
 HTML=$(OUTPUTDIR)/index.html $(OUTPUTDIR)/maintenance.html $(COREDIR)/main.css
 JAVASCRIPT=$(COREDIR)/nanowasp.js $(COREDIR)/z80.js $(COREDIR)/data.js
@@ -33,7 +32,7 @@ IMAGES=$(COREDIR)/monitor.jpg
 HTACCESS=$(COREDIR)/.htaccess
 
 .PHONY: nanowasp
-nanowasp: $(HTML) $(JAVASCRIPT) $(IMAGES) $(SOFTWARE) $(HTACCESS)
+nanowasp: $(HTML) $(JAVASCRIPT) $(IMAGES) software $(HTACCESS)
 
 # Used as a dependency for targets that should always be built (e.g. targets that need to update if $(VERSION) changes).
 .PHONY: force_build
@@ -55,8 +54,10 @@ $(COREDIR)/main.css: main.css | $(COREDIR)
 $(IMAGES): $(COREDIR)/%: images/% | $(COREDIR)
 	cp $< $@
 
-$(SOFTWARE): $(SOFTWAREDIR)/%: data/software/% | $(SOFTWAREDIR)
-	cp $< $@
+.PHONY: software
+software:
+	mkdir -p "$(SOFTWAREDIR)"
+	cp -R "$(SOFTWARE_IN)" "$(SOFTWAREDIR)"
 
 $(COREDIR)/nanowasp.js: $(NANOWASP_JS) | $(COREDIR)
 	cat $(NANOWASP_JS) | $(YUI) > $@
@@ -91,7 +92,4 @@ $(OBJDIR):
 	mkdir -p $@
 
 $(COREDIR):
-	mkdir -p $@
-
-$(SOFTWAREDIR):
 	mkdir -p $@

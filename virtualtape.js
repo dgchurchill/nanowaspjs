@@ -82,21 +82,6 @@ nanowasp.VirtualTape.getDefaultParameters = function (filename) {
     return tapeParameters;
 };
 
-nanowasp.VirtualTape.loadFromUrl = function (url) {
-    var request = new XMLHttpRequest();
-    request.open('GET', url);
-    request.onreadystatechange = function () {
-        if (request.readyState == 4) {  
-            if (request.status == 200) {
-              console.log(request.responseText);
-            } else {
-              console.log('Error', request.statusText);
-            }
-        }
-    };
-    request.send(null);
-};
-
 nanowasp.VirtualTape.prototype = {
     // Asynchronously gets a byte array containing the data as it would be stored
     // on tape (i.e. including tape header and checksummed blocks).  On success, the
@@ -120,7 +105,7 @@ nanowasp.VirtualTape.prototype = {
                 onSuccess(this_._formatData());
             },
             function (request) {
-                onError(this_);
+                onError(request);
             })
     },
 

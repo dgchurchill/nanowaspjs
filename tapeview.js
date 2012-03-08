@@ -37,7 +37,7 @@ nanowasp.TapeView.prototype = {
         this._nameSpan.onclick = function () {
             onTapeSelected(this_._tape);
         };
-        this._nameSpan.appendChild(document.createTextNode(this._tape.name));
+        this._nameSpan.appendChild(document.createTextNode(this._tape.title));
         
         var editDiv = document.createElement("div");
         editDiv.className = "link right";
@@ -69,7 +69,7 @@ nanowasp.TapeView.prototype = {
         this._form = this._createForm(
             this._tape,
             [
-                { property: 'name', label: 'Name', validator: nameValidator },
+                { property: 'title', label: 'Name', validator: nameValidator },
                 { property: 'typeCode', label: 'Type code' },
                 { property: 'extra', label: 'Spare byte', validator: this._integerValidator(0, 0xFF), renderer: toHex },
                 { property: 'startAddress', label: 'Load address', validator: this._integerValidator(0, 0xFFFF), renderer: toHex },
