@@ -168,16 +168,28 @@ var utils = {
     ajaxGetBinary: function (url, onSuccess, onError) {
         var request = new XMLHttpRequest();
         request.open('GET', url, true);
-        request.overrideMimeType('text/plain; charset=x-user-defined');
+
+        if (request.overrideMimeType) {
+            request.overrideMimeType('text/plain; charset=x-user-defined');
+        }
         
         request.onreadystatechange = function () {
             if (request.readyState == 4) {  
                 if (request.status == 200) {
-                    var response = request.responseText;
+                    var response, getByte;
+                    if (typeof(request.responseBody) != "undefined") {
+                        response = new VBArray(request.responseBody).toArray();
+                        getByte = function (i) { return response[i]; };
+                    } else {
+                        var response = request.responseText;
+                        getByte = function (i) { return response.charCodeAt(i) & 0xff; };
+                    }
+
                     var buffer = utils.makeUint8Array(response.length);
                     for (var i = 0; i < response.length; ++i) {
-                        buffer[i] = response.charCodeAt(i) & 0xff;
+                        buffer[i] = getByte(i);
                     }
+
                     onSuccess(buffer);
                 } else {
                     onError(request);
