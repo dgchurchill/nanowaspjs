@@ -111,7 +111,7 @@ nanowasp.software = [
         filename: "earth.mwb"
     },
     {
-        title: "Isbok Adventure.mwb",
+        title: "Isbok Adventure",
         author: "Richard Larkin",
         url: "software/richard_larkin/isbok-g.mwb",
         filename: "isbok-g.mwb"
