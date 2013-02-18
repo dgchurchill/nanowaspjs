@@ -95,6 +95,7 @@ nanowasp.VirtualTape.prototype = {
     getFormattedData: function (onSuccess, onError) {
         if (this.data != null) {
             onSuccess(this._formatData());
+            return;
         }
         
         var this_ = this;

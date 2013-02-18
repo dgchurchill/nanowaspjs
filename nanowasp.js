@@ -114,7 +114,7 @@ nanowasp.NanoWasp.prototype = {
                             data[i] = reader.result.charCodeAt(i);
                         }
                         
-                        nanowasp.tapes[f.fileName] = nanowasp.VirtualTape.createAutoTape(f.fileName, data);
+                        nanowasp.tapes.push(new nanowasp.VirtualTape(f.name, f.name, data, null))
                         update_tapes();
                     };
                     reader.readAsBinaryString(f);  // Not all browsers support readAsArrayBuffer
@@ -149,6 +149,11 @@ nanowasp.NanoWasp.prototype = {
         if (this._tapeLoadRequest != null) {
             this._tapeLoadRequest.abort();
         }
+        
+        var selected_tape_name = document.getElementById("selected_tape_name");
+        selected_tape_name.innerHTML = "";
+        selected_tape_name.appendChild(document.createTextNode(tape.title));
+        document.getElementById("tape_loading").style.display = "inline";
 
         var this_ = this;
         this._tapeLoadRequest = this.microbee.loadTape(
@@ -163,11 +168,6 @@ nanowasp.NanoWasp.prototype = {
                 document.getElementById("tape_loading").style.display = "none";
                 this_._tapeLoadRequest = null;
             });
-        
-        var selected_tape_name = document.getElementById("selected_tape_name");
-        selected_tape_name.innerHTML = "";
-        selected_tape_name.appendChild(document.createTextNode(tape.title));
-        document.getElementById("tape_loading").style.display = "inline";
     },
 
     _onTapeSelected: function (tape) {
