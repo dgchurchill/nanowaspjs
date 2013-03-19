@@ -132,7 +132,7 @@ nanowasp.Z80Cpu.prototype = {
     },
     
     clearBreakpoint: function () {
-        z80_clear_breakpoint();
+        z80_clear_breakpoints();
     },
     
     registerMemoryDevice: function (address, handler) {

@@ -29,13 +29,11 @@ function sign_extend(v) {
 }
 
 function z80_set_breakpoint(location, handler) {
-    z80.breakpoint = location;
-    z80.breakpoint_handler = handler;
+    z80.breakpoints[location] = handler;
 }
 
-function z80_clear_breakpoint() {
-    z80.breakpoint = -1;
-    z80.breakpoint_handler = null;
+function z80_clear_breakpoints() {
+    z80.breakpoints = {};
 }
 
 function z80_ret() {
@@ -52,11 +50,12 @@ function z80_do_opcodes()
 
     /* Do the instruction fetch; readbyte_internal used here to avoid
        triggering read breakpoints */
-       
-    if (PC == z80.breakpoint) {
-        z80.breakpoint_handler();
+    
+    breakpoint = z80.breakpoints[PC];
+    if (breakpoint != null) {
+        breakpoint();
     }
-       
+
     contend( PC, 4 ); R = (R+1) & 0x7f;
     opcode = readbyte_internal( PC++ ); PC &= 0xffff;
 

@@ -27,14 +27,19 @@ nanowasp.TapeInjector = function (z80cpu) {
     this._z80cpu = z80cpu;
     this._data = [];
     this._offset = 0;
+
+    this._write_state = ['find_header', 0];
 };
 
 nanowasp.TapeInjector.prototype = {
-    LOCATION: 0xAB6D,
+    READ_LOCATION: 0xAB6D,
+
+    WRITE_LOCATION: 0xAB26,
      
     reset: function () {
         this._offset = 0;
-        this._z80cpu.setBreakpoint(this.LOCATION, utils.bind(this._readByte, this));
+        this._z80cpu.setBreakpoint(this.READ_LOCATION, utils.bind(this._readByte, this));
+        this._z80cpu.setBreakpoint(this.WRITE_LOCATION, utils.bind(this._writeByte, this));
     },
     
     setData: function (data) {
@@ -51,7 +56,81 @@ nanowasp.TapeInjector.prototype = {
         
         z80.a = value;
         z80_ret();
+    },
+
+    _writeByte: function () {
+        var value = z80.a;
+        z80_ret();
+
+        // TODO: Merge this parser in with the serializer in VirtualTape, and share the type detection.
+
+        var string_t = ['', function (a, n) { return a + String.fromCharCode(n); }];
+        var int_t = [0, function (a, n) { return a / 256 + 256 * n; }];  // Er, well it works for 2 bytes :D
+        var null_t = [0, function (a, n) { return 0; }];
+
+        var header = [
+            ['name', 6, string_t],
+            ['type', 1, string_t],
+            ['length', 2, int_t],
+            ['skip', 8, null_t]
+        ];
+
+        var blockSize = 256;
+
+        switch (this._write_state[0]) {
+            case 'find_header':
+                if (value == this._write_state[1]) {
+                    switch (this._write_state[1]) {
+                        case 0:
+                            this._write_state[1] = 1;
+                            break;
+
+                        case 1:
+                            this._write_state = ['header', 0, 0];
+                            this._write_header = {};
+                    }
+                }
+                break;
+
+            case 'header':
+                var entry = header[this._write_state[1]];
+
+                if (this._write_state[2] == 0) {
+                    this._write_header[entry[0]] = entry[2][0];
+                }
+
+                this._write_header[entry[0]] = entry[2][1](this._write_header[entry[0]], value);
+                this._write_state[2] += 1;
+
+                if (this._write_state[2] == entry[1]) {
+                    this._write_state[1] += 1;
+                    this._write_state[2] = 0;
+
+                    if (this._write_state[1] == header.length) {
+                        this._write_state = ['data', 0];
+                        this._write_data = [];
+                    }
+                }
+                break;
+
+            case 'data':
+                if (this._write_state[1] == blockSize) {
+                    // Checksum, ignore
+                    this._write_state[1] = 0;
+                } else {
+                    this._write_data.push(value);
+                    this._write_state[1] += 1;
+                }
+
+                if (this._write_data.length == this._write_header['length']) {
+                    console.log('Got file ' + this._write_header.name + ' of type ' + this._write_header.type + ' with length ' + this._write_header.length);
+                    var blob = new Blob([new Uint8Array(this._write_data)], {type: 'application/octet-binary'});
+                    saveAs(blob, this._write_header.name.trimRight() + (this._write_header.type == 'M' ? '.bin' : '.mwb'));
+                    
+                    // There'll be one more checksum byte, but the find_header state will ignore it.
+                    this._write_state = ['find_header', 0];
+                }
+                break;
+        }
     }
 };
-
-

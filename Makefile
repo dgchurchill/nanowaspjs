@@ -18,7 +18,8 @@ SOFTWAREDIR=$(OUTPUTDIR)/software
 
 NANOWASP_JS=nanowasp.js crtc.js crtcmemory.js keyboard.js latchrom.js memmapper.js memory.js \
             microbee.js utils.js z80cpu.js virtualtape.js tapeinjector.js tapeview.js \
-            software.js debugger.js z80/disassembler_dicts.js z80/disassembler.js
+            software.js debugger.js z80/disassembler_dicts.js z80/disassembler.js \
+            FileSaver/FileSaver.js
 Z80_JS=z80/z80_full.js z80/z80_ops_full.js
 
 ROMS=$(wildcard data/roms/*.rom)
