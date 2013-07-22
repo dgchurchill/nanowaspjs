@@ -19,7 +19,7 @@
 
 var nanowasp = nanowasp || {};
 
-nanowasp.MicroBee = function (graphicsContext, pressedKeys) {
+nanowasp.MicroBee = function (graphicsContext, keyboardContext) {
     this._isRunning = false;
     this._runSlice = utils.bind(this._runSliceBody, this);
     this._sliceDoneCallback = null;
@@ -28,7 +28,7 @@ nanowasp.MicroBee = function (graphicsContext, pressedKeys) {
     this._devices = {};
     nanowasp.z80cpu = new nanowasp.Z80Cpu();  // TODO: Code in z80cpu relies on the Z80Cpu instance being available here.  Need to eliminate the globals from the z80 emulation code so this restriction can be removed.
     this._devices.z80 = nanowasp.z80cpu;
-    this._devices.keyboard = new nanowasp.Keyboard(pressedKeys);
+    this._devices.keyboard = new nanowasp.Keyboard(keyboardContext);
     this._devices.latchrom = new nanowasp.LatchRom();
     this._devices.crtc = new nanowasp.Crtc(graphicsContext);
     this._devices.memMapper = new nanowasp.MemMapper();
@@ -49,7 +49,7 @@ nanowasp.MicroBee = function (graphicsContext, pressedKeys) {
     var roms = [ this._devices.rom1, this._devices.rom2, this._devices.rom3 ];
     var rams = [ this._devices.ram0, this._devices.ram1, this._devices.ram2, this._devices.ram3 ];
     this._devices.memMapper.connect(this._devices.z80, rams, roms, this._devices.crtcMemory);
-    this._devices.keyboard.connect(this._devices.crtc, this._devices.latchrom);
+    this._devices.keyboard.connect(this, this._devices.crtc, this._devices.latchrom);
     this._devices.crtc.connect(this, this._devices.keyboard, this._devices.crtcMemory);
     this._devices.crtcMemory.connect(this._devices.crtc, this._devices.latchrom);
     

@@ -37,40 +37,40 @@ nanowasp.NanoWasp = function () {
 };
 
 nanowasp.NanoWasp.prototype = {     
-    main: function () {
-        var usedKeys = {};
-        var keyMap = nanowasp.Keyboard.prototype.keyMap;
-        for (var i = 0; i < keyMap.length; ++i) {
-            usedKeys[keyMap[i]] = true;
-        }
-        
-        var ignoreKey = (function (this_) {
+    main: function () {        
+        var performDefault = (function (this_) {
             return function (event) {
-                return !this_._sendKeysToMicrobee || event.metaKey || !(event.keyCode in usedKeys);
+                return !this_._sendKeysToMicrobee || event.metaKey || !(event.keyCode in nanowasp.Keyboard.capturedKeys);
             };
         })(this);
         
         var pressedKeys = [];
+        var inputBuffer = [];
+
         window.onkeydown = function (event) {
-            if (ignoreKey(event)) {
-                return true;
-            }
-    
             pressedKeys[event.keyCode] = true;
-            return false;
+
+            var mapped = nanowasp.Keyboard.capturedKeys[event.keyCode];
+            if (mapped != undefined) {
+                inputBuffer.push(mapped);
+            }
+
+            return performDefault(event);
         };
     
         window.onkeypress = function (event) {
-            return ignoreKey(event);
+            inputBuffer.push(event.charCode);
+            return performDefault(event);
         };
     
         window.onkeyup = function (event) {
-            if (ignoreKey(event)) {
-                return true;
-            }
-    
             pressedKeys[event.keyCode] = false;
-            return false;
+            return performDefault(event);
+        };
+
+        keyboardContext = {
+            pressed: pressedKeys,
+            buffer: inputBuffer
         };
         
         document.getElementById("hide_notice_button").onclick = function () {
@@ -83,7 +83,7 @@ nanowasp.NanoWasp.prototype = {
 
         var graphicsContext = document.getElementById("vdu").getContext('2d');
         
-        this.microbee = new nanowasp.MicroBee(graphicsContext, pressedKeys);
+        this.microbee = new nanowasp.MicroBee(graphicsContext, keyboardContext);
         var microbee = this.microbee;
             
         document.getElementById("tape_menuitem").addEventListener(
@@ -235,6 +235,7 @@ window.onload = function () {
     
     try {
         // nw variable is global to make debugging easier.
+        nanowasp.Keyboard.init();
         nw = new nanowasp.NanoWasp();
         nw.main();
     } catch (e) {
