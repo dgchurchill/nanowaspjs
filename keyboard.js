@@ -128,9 +128,14 @@ nanowasp.Keyboard.prototype = {
             return this._keyboardContext.pressed[nanowasp.Keyboard.microbeeToJavascriptKeyMap[microbeeCode]]
         } else {
             if (this._microbee.getTime() > this._lastBufferedKeyTime + this.BUFFERED_KEY_RATE) {
-                var charCode = this._keyboardContext.buffer.shift();
-                this._lastBufferedKey = nanowasp.Keyboard.charactersToMicrobeeKeys[charCode];
                 this._lastBufferedKeyTime = this._microbee.getTime();
+
+                if (this._lastBufferedKey == undefined) {
+                    var charCode = this._keyboardContext.buffer.shift();
+                    this._lastBufferedKey = nanowasp.Keyboard.charactersToMicrobeeKeys[charCode];                    
+                } else {
+                    this._lastBufferedKey = undefined; // simulate key release
+                }
             }
 
             return this._lastBufferedKey != undefined && this._lastBufferedKey.indexOf(microbeeCode) >= 0;
