@@ -68,6 +68,16 @@ nanowasp.NanoWasp.prototype = {
             return performDefault(event);
         };
 
+        window.addEventListener(
+            "paste",
+            function (event) {
+                var text = event.clipboardData.getData("text/plain");
+                for (var i = 0; i < text.length; ++i) {
+                    inputBuffer.push(text.charCodeAt(i));
+                }
+            },
+            false);
+
         keyboardContext = {
             pressed: pressedKeys,
             buffer: inputBuffer
