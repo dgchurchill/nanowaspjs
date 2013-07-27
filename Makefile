@@ -3,7 +3,7 @@ TYPE=debug
 
 ifeq ($(TYPE),release)
 OUTPUTDIR=release
-YUI=java -jar tools/yuicompressor-2.4.6.jar --type js
+YUI=java -jar tools/yuicompressor-2.4.7.jar --type js
 else
 OUTPUTDIR=debug
 YUI=cat
