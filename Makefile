@@ -81,6 +81,8 @@ $(OBJDIR)/nanowasp-data.js: $(ROMS_JS) | $(OBJDIR)
 $(OBJDIR)/%.js: data/roms/%.rom | $(OBJDIR)
 	echo "nanowasp.data.roms['$*'] = \"$$(openssl base64 -in "$<" | sed -e "$$ ! s/$$/\\\\/")\";" > "$@"
 
+z80/disassembler_dicts.js: z80/gen_disassembler_dicts.py
+	python $< > $@
 
 .PHONY: z80
 z80:

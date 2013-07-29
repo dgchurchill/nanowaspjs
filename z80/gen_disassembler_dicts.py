@@ -1,5 +1,6 @@
 
 import re
+import os
 from collections import namedtuple, OrderedDict
 
 Opcode = namedtuple('Opcode', 'byte, mnemonic, operand')
@@ -72,9 +73,11 @@ opcode_sets = OrderedDict([
 ])
 
 operands = set()
+source_dir = os.path.dirname(__file__)
 
 for opcode_set in opcode_sets.iteritems():
-	ocs = list(opcodes(opcode_set[1][0]))
+	filename = os.path.join(source_dir, opcode_set[1][0])
+	ocs = list(opcodes(filename))
 	operands.update(x.operand for x in ocs)
 	make_js_dict(opcode_set[0], ocs, opcode_set[1][1])
 	print
