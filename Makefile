@@ -88,6 +88,10 @@ z80/disassembler_dicts.js: z80/gen_disassembler_dicts.py
 z80:
 	cd z80 && $(MAKE)
 
+.PHONY: FileSaver/FileSaver.js
+FileSaver/FileSaver.js:
+	git submodule update --init
+
 $(OUTPUTDIR):
 	mkdir -p $@
 
