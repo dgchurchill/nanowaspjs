@@ -30,6 +30,22 @@
 	    <li>
 	        <div><span id="debugger_button" class="link">Show Debugger</span></div>
 	    </li>
+	    <li id="settings_menu">
+	    	<div id="settings_menuitem">
+	    		<span class="link">Settings</span>
+	    	</div>
+	    	<div class="dropdown">
+	    		<menu>
+	    			<li class="menuitem">
+	    				<label><input type="checkbox" id="run_in_background">Run in background</label>
+	    			</li>
+	    			<li class="menuitem last">
+	    				<label><input type="radio" name="keyboard_mode" id="keyboard_mode_natural" value="natural" checked="checked">Natural keyboard</label><br>
+	    				<label><input type="radio" name="keyboard_mode" id="keyboard_mode_strict" value="strict">Strict keyboard</label>
+	    			</li>	    			
+	    		</menu>
+	    	</div>
+	    </li>
 	    <li id="tape_menu">
 	        <div id="tape_menuitem">
 	            <span class="link">Tape: <span id="selected_tape_name"></span> <span id="tape_loading" style="display: none;">loading...</span></span>

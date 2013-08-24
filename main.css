@@ -200,7 +200,10 @@ form p {
 label {
     display: inline-block;
     font-size: 80%;
-    margin-left: 10px;
+}
+
+menu#tapes label {
+    margin-left: 10px;    
 }
 
 label.invalid {
@@ -211,7 +214,7 @@ input {
     display: block;
 }
 
-input[type="checkbox"] { 
+input[type="checkbox"], input[type="radio"] { 
     display: inline;
     margin-right: 5px;
 }

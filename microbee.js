@@ -164,5 +164,9 @@ nanowasp.MicroBee.prototype = {
             function (request) {
                 onError(tape, request);
             });
+    },
+
+    setKeyboardStrictMode: function (enabled) {
+        this._devices.keyboard.setStrictMode(enabled);
     }
 };

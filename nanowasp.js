@@ -34,32 +34,38 @@ nanowasp.showError = function (text) {
 
 nanowasp.NanoWasp = function () {
     this._sendKeysToMicrobee = true;
+    this._menus = [ "settings_menu", "tape_menu" ];
 };
 
 nanowasp.NanoWasp.prototype = {     
-    main: function () {        
-        var performDefault = (function (this_) {
-            return function (event) {
-                return !this_._sendKeysToMicrobee || event.metaKey || !(event.keyCode in nanowasp.Keyboard.capturedKeys);
-            };
-        })(this);
+    main: function () {
+        var this_ = this;
+
+        var performDefault = function (event) {
+            return !this_._sendKeysToMicrobee || event.metaKey || !(event.keyCode in nanowasp.Keyboard.capturedKeys);
+        };
         
         var pressedKeys = [];
         var inputBuffer = [];
 
         window.onkeydown = function (event) {
-            pressedKeys[event.keyCode] = true;
+            if (this_._sendKeysToMicrobee) {
+                pressedKeys[event.keyCode] = true;
 
-            var mapped = nanowasp.Keyboard.capturedKeys[event.keyCode];
-            if (mapped != undefined) {
-                inputBuffer.push(mapped);
+                var mapped = nanowasp.Keyboard.capturedKeys[event.keyCode];
+                if (mapped != undefined) {
+                    inputBuffer.push(mapped);
+                }
             }
 
             return performDefault(event);
         };
     
         window.onkeypress = function (event) {
-            inputBuffer.push(event.charCode);
+            if (this_._sendKeysToMicrobee) {
+                inputBuffer.push(event.charCode);
+            }
+
             return performDefault(event);
         };
     
@@ -95,12 +101,18 @@ nanowasp.NanoWasp.prototype = {
         
         this.microbee = new nanowasp.MicroBee(graphicsContext, keyboardContext);
         var microbee = this.microbee;
-            
-        document.getElementById("tape_menuitem").addEventListener(
-            "click", //"DOMActivate",
-            utils.bind(this._toggleTapesMenu, this),
-            false);
         
+        var hook_menu_toggle = function(menu_id) {
+            document.getElementById(menu_id + "item").addEventListener(
+                "click",
+                function () { this_._toggleMenu(menu_id); },
+                false);
+        };
+
+        for (var menu in this._menus) {
+            hook_menu_toggle(this._menus[menu]);
+        }
+                    
         nanowasp.tapes = [];
         for (var i = 0; i < nanowasp.software.length; ++i) {
             var info = nanowasp.software[i];
@@ -139,19 +151,43 @@ nanowasp.NanoWasp.prototype = {
 
         document.getElementById("reset_button").onclick = function () { microbee.reset(); };
         
-        window.onblur = utils.bind(microbee.stop, microbee);
+        var keyboard_mode_strict = document.getElementById("keyboard_mode_strict");
+        keyboard_mode_strict.onchange = document.getElementById("keyboard_mode_natural").onchange = function () {
+            microbee.setKeyboardStrictMode(keyboard_mode_strict.checked);
+        };
+
+        var run_in_background = document.getElementById("run_in_background");
+        
+        window.onblur = function () {
+            if (!run_in_background.checked) {
+                microbee.stop();
+            }
+        };
+
         window.onfocus = utils.bind(microbee.start, microbee);
     
         microbee.start();
     },
-    
-    _toggleTapesMenu: function () {
-        var is_selected = utils.toggleHtmlClass("tape_menu", "selected");
+
+    _toggleMenu: function (name) {
+        var is_selected = false;
+
+        for (var menu in this._menus) {
+            if (this._menus[menu] == name) {
+                is_selected = utils.toggleHtmlClass(name, "selected");
+            } else {
+                utils.removeHtmlClass(this._menus[menu], "selected");
+            }
+        }
+
         this._sendKeysToMicrobee = !is_selected;
     },
     
-    _hideTapesMenu: function () {
-        utils.removeHtmlClass("tape_menu", "selected");
+    _hideMenus: function () {
+        for (var menu in this._menus) {
+            utils.removeHtmlClass(this._menus[menu], "selected");
+        }
+
         this._sendKeysToMicrobee = true;
     },
     
@@ -182,7 +218,7 @@ nanowasp.NanoWasp.prototype = {
 
     _onTapeSelected: function (tape) {
         this._loadTape(tape);
-        this._hideTapesMenu();
+        this._hideMenus();
     },
     
     _onTapeEdited: function (tape) {

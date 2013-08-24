@@ -21,6 +21,7 @@ var nanowasp = nanowasp || {};
 
 nanowasp.Keyboard = function (keyboardContext) {
     this._keyboardContext = keyboardContext;
+    this._strictMode = false;
 };
 
 nanowasp.Keyboard.microbeeToJavascriptKeyMap = [
@@ -100,6 +101,8 @@ nanowasp.Keyboard.prototype = {
     reset: function () {
         this._lastBufferedKey = undefined;
         this._lastBufferedKeyTime = 0;
+        this._keyboardContext.pressed.length = 0;
+        this._keyboardContext.buffer.length = 0;
     },
         
     check: function (crtcAddress) {        
@@ -123,8 +126,13 @@ nanowasp.Keyboard.prototype = {
         }
     },
 
+    setStrictMode: function(enabled) {
+        this._strictMode = enabled;
+        this.reset();
+    },
+
     _isPressed: function (microbeeCode) {
-        if (false) { // (this._keyboardContext.buffer.length == 0) {
+        if (this._strictMode) {
             return this._keyboardContext.pressed[nanowasp.Keyboard.microbeeToJavascriptKeyMap[microbeeCode]]
         } else {
             if (this._microbee.getTime() > this._lastBufferedKeyTime + this.BUFFERED_KEY_RATE) {
