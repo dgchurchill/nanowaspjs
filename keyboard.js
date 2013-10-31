@@ -134,6 +134,7 @@ nanowasp.Keyboard.prototype = {
     _isPressed: function (microbeeCode) {
         if (this._strictMode) {
             return this._keyboardContext.pressed[nanowasp.Keyboard.microbeeToJavascriptKeyMap[microbeeCode]]
+            this._keyboardContext.buffer.length = 0;
         } else {
             if (this._microbee.getTime() > this._lastBufferedKeyTime + this.BUFFERED_KEY_RATE) {
                 this._lastBufferedKeyTime = this._microbee.getTime();
