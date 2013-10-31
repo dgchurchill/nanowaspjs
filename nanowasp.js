@@ -51,10 +51,9 @@ nanowasp.NanoWasp.prototype = {
         window.onkeydown = function (event) {
             if (this_._sendKeysToMicrobee) {
                 pressedKeys[event.keyCode] = true;
-
                 var mapped = nanowasp.Keyboard.capturedKeys[event.keyCode];
                 if (mapped != undefined) {
-                    inputBuffer.push(mapped);
+                    inputBuffer.push([mapped, event.ctrlKey]);
                 }
             }
 
@@ -63,7 +62,7 @@ nanowasp.NanoWasp.prototype = {
     
         window.onkeypress = function (event) {
             if (this_._sendKeysToMicrobee) {
-                inputBuffer.push(event.charCode);
+                inputBuffer.push([event.charCode, event.ctrlKey]);
             }
 
             return performDefault(event);
@@ -79,7 +78,7 @@ nanowasp.NanoWasp.prototype = {
             function (event) {
                 var text = event.clipboardData.getData("text/plain");
                 for (var i = 0; i < text.length; ++i) {
-                    inputBuffer.push(text.charCodeAt(i));
+                    inputBuffer.push([text.charCodeAt(i), false]);
                 }
             },
             false);

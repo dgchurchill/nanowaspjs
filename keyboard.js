@@ -81,6 +81,11 @@ nanowasp.Keyboard.init = function () {
     var unshifted = '@abcdefghijklmnopqrstuvwxyz[\\]' + '^\b0123456789'  + ':;,-./\x1b\x7f\r\t\n\x0f\x18 ';
     var shifted   = '`ABCDEFGHIJKLMNOPQRSTUVWXYZ{|}'  + '~\b0!"#$%&\'()' + '*+<=>?\x1b\x7f\r\t\n\x0f\x18 ';
 
+    // Control characters
+    for (var i = 1; i <= 26; ++i) {
+        toMicrobee[i] = [i];
+    }
+
     for (var i = 0; i < unshifted.length; ++i) {
         toMicrobee[shifted[i].charCodeAt(0)] = [shiftCode, i];  // Shifted first so the unshifted overwrites the shifted if the key doesn't have a shifted version.
         toMicrobee[unshifted[i].charCodeAt(0)] = [i];
@@ -140,8 +145,13 @@ nanowasp.Keyboard.prototype = {
                 this._lastBufferedKeyTime = this._microbee.getTime();
 
                 if (this._lastBufferedKey == undefined) {
-                    var charCode = this._keyboardContext.buffer.shift();
-                    this._lastBufferedKey = nanowasp.Keyboard.charactersToMicrobeeKeys[charCode];                    
+                    var keyEvent = this._keyboardContext.buffer.shift();
+                    if (keyEvent != undefined) {
+                        this._lastBufferedKey = nanowasp.Keyboard.charactersToMicrobeeKeys[keyEvent[0]];
+                        if (keyEvent[1]) {
+                            this._lastBufferedKey.push(57);  // microbee ctrl key code
+                        }
+                    }
                 } else {
                     this._lastBufferedKey = undefined; // simulate key release
                 }
