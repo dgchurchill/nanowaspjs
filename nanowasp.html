@@ -114,18 +114,32 @@ NanoWasp requires a relatively recent browser with JavaScript enabled.
 
 <h1>Quick Start</h1>
 <ol>
-<li>Select a tape from the drop down list.</li>
+<li>Select a tape from the "Tape:" menu.</li>
 <li>Type "load" and press Return.</li>
 <li>Type "run" and press Return.</li>
 </ol>
 </div>
 
 <div class="content">
-<h1>Key Mapping</h1>
+<h1>Keyboard Modes</h1>
+<h2>Natural keyboard</h2>
 <p>
-Most characters can be entered using the usual key (assuming you're using a Latin-script keyboard).
-However, punctuation characters are laid out differently on a MicroBee keyboard.
-The following table shows the mapping for these characters:
+The layout of the MicroBee keyboard differs from that of modern keyboards.
+For ease of use, NanoWasp defaults to using a "Natural keyboard" mapping.
+In this mode, characters entered are automatically translated to the appropriate MicroBee key presses and releases.
+To enter an asterisk, e.g., simply enter it as you would in any other program.
+You can also paste text when in this mode.
+The natural keyboard mode works well for most programs, so use it if you can.
+</p>
+<h2>Strict keyboard</h2>
+<p>
+Some programs, however, care about the physical key presses and releases rather than the logical character.
+For these programs, use the "Settings" menu to select the "Strict keyboard" mapping.
+In the strict mode, each key on the keyboard is mapped one-to-one to a key on the MicroBee keyboard.
+When a key is pressed, the corresponding emulated MicroBee key will be pressed.
+Ditto for when keys are released.
+Most characters can still be entered using the usual key; however, punctuation characters are laid out differently on a MicroBee keyboard.
+The following table shows the mapping for these characters when in strict mode:
 </p>
  
 <table style="display: inline-table;">
