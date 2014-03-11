@@ -125,7 +125,7 @@ nanowasp.TapeInjector.prototype = {
                 if (this._write_data.length == this._write_header['length']) {
                     console.log('Got file ' + this._write_header.name + ' of type ' + this._write_header.type + ' with length ' + this._write_header.length);
                     var blob = new Blob([new Uint8Array(this._write_data)], {type: 'application/octet-binary'});
-                    saveAs(blob, this._write_header.name.trimRight() + (this._write_header.type == 'M' ? '.bin' : '.mwb'));
+                    saveAs(blob, utils.trimRight(this._write_header.name) + (this._write_header.type == 'M' ? '.bin' : '.mwb'));
                     
                     // There'll be one more checksum byte, but the find_header state will ignore it.
                     this._write_state = ['find_header', 0];

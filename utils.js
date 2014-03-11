@@ -216,6 +216,10 @@ var utils = {
         }
         
         return true;
+    },
+
+    trimRight: function (str) {
+        return str.replace(/\s+$/, '');
     }
 };
 
