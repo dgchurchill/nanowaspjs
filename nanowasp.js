@@ -42,7 +42,10 @@ nanowasp.NanoWasp.prototype = {
         var this_ = this;
 
         var performDefault = function (event) {
-            return !this_._sendKeysToMicrobee || event.metaKey || !(event.keyCode in nanowasp.Keyboard.capturedKeys);
+            // Swallowing all the ctrl keys is possibly a bit obnoxious...
+            // Ideally we'd only swallow them when focus is on the MicroBee, need to come up with a clean way to indicate focus.
+            var captured = this_._sendKeysToMicrobee && ((event.keyCode in nanowasp.Keyboard.capturedKeys) || event.ctrlKey);
+            return event.metaKey || !captured;
         };
         
         var pressedKeys = [];
@@ -51,9 +54,14 @@ nanowasp.NanoWasp.prototype = {
         window.onkeydown = function (event) {
             if (this_._sendKeysToMicrobee) {
                 pressedKeys[event.keyCode] = true;
-                var mapped = nanowasp.Keyboard.capturedKeys[event.keyCode];
-                if (mapped != undefined) {
-                    inputBuffer.push([mapped, event.ctrlKey]);
+
+                if (event.ctrlKey && event.keyCode >= 'A'.charCodeAt(0) && event.keyCode <= 'Z'.charCodeAt(0)) {
+                    inputBuffer.push([event.keyCode - 'A'.charCodeAt(0) + 1, true]);
+                } else {
+                    var mapped = nanowasp.Keyboard.capturedKeys[event.keyCode];
+                    if (mapped != undefined) {
+                        inputBuffer.push([mapped, false]);
+                    }
                 }
             }
 
