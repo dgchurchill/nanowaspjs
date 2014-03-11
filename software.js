@@ -136,5 +136,10 @@ nanowasp.software = [
         url: "software/richard_larkin/pucker.bee",
         filename: "pucker.bee",
         tapeParameters: ["M", 0x03a2, 0x03a2, true, 0x00]
+    },
+    {
+        title: "Sheepdog Trials",
+        url: "software/sheepd.mwb",
+        filename: "sheepd.mwb"
     }
 ];
