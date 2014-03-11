@@ -62,14 +62,16 @@ nanowasp.Keyboard.microbeeToJavascriptKeyMap = [
 ];
 
 nanowasp.Keyboard.capturedKeys = {
-    8: '\b'.charCodeAt(0),  // Backspace
-    9: '\t'.charCodeAt(0),  // Tab
-    13: '\n'.charCodeAt(0), // Enter
-    27: '\033'.charCodeAt(0), // Escape
-    32: ' '.charCodeAt(0),  // Space
-    34: '\r', // PgDn
-    35: '\x18'.charCodeAt(0), // End
-    46: '\x7f'.charCodeAt(0)  // Delete
+    8: ['\b'.charCodeAt(0)],  // Backspace
+    9: ['\t'.charCodeAt(0)],  // Tab
+    13: ['\n'.charCodeAt(0)], // Enter
+    27: ['\033'.charCodeAt(0)], // Escape
+    32: [' '.charCodeAt(0)],  // Space
+    34: ['\r'], // PgDn
+    35: ['\x18'.charCodeAt(0)], // End
+    46: ['\x7f'.charCodeAt(0)],  // Delete
+    191: ['/'.charCodeAt(0), '?'.charCodeAt(0)], // Firefox uses / and ' as shortcuts for quick search, 
+    222: ["'".charCodeAt(0), '"'.charCodeAt(0)] // so have to capture them and their shifted versions here.
 };
 
 nanowasp.Keyboard.charactersToMicrobeeKeys = {};

@@ -60,7 +60,8 @@ nanowasp.NanoWasp.prototype = {
                 } else {
                     var mapped = nanowasp.Keyboard.capturedKeys[event.keyCode];
                     if (mapped != undefined) {
-                        inputBuffer.push([mapped, false]);
+                        var charCode = mapped.length == 2 && event.shiftKey ? mapped[1] : mapped[0];
+                        inputBuffer.push([charCode, false]);
                     }
                 }
             }
