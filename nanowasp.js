@@ -144,15 +144,11 @@ nanowasp.NanoWasp.prototype = {
                 (function (f) {
                     var reader = new FileReader();
                     reader.onload = function (e) {
-                        var data = utils.makeUint8Array(reader.result.length);
-                        for (var i = 0; i < data.length; ++i) {
-                            data[i] = reader.result.charCodeAt(i);
-                        }
-                        
+                        var data = utils.makeUint8Array(reader.result);
                         nanowasp.tapes.push(new nanowasp.VirtualTape(f.name, f.name, data, null))
                         update_tapes();
                     };
-                    reader.readAsBinaryString(f);  // Not all browsers support readAsArrayBuffer
+                    reader.readAsArrayBuffer(f);
                 })(file);
             }
         };
