@@ -86,7 +86,13 @@ nanowasp.NanoWasp.prototype = {
             function (event) {
                 var text = event.clipboardData.getData("text/plain");
                 for (var i = 0; i < text.length; ++i) {
-                    inputBuffer.push([text.charCodeAt(i), false]);
+                    var code = text.charCodeAt(i);
+                    if (code ==  0x0D) {
+                        // strip CRs
+                        continue;
+                    }
+
+                    inputBuffer.push([code, false]);
                 }
             },
             false);
