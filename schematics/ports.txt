@@ -1,0 +1,155 @@
+Microbee Ports
+==============
+
+Activated by in/out instructions, setting !IORQ active.
+
+
+
+Mainboard
+---------
+
+IC27,34 perform decoding.
+
+Devices are enabled on the following conditions:
+
+A15-8,4 ignored
+A7-5 = 000      ] performed by IC27 (7485 4-bit comparator)
+M1 active       ] when conditions met, enables IC34
+
+A3-2 = 00 - Z80 PIO
+     = 01 - Ports 4-7 (RTC on some models, available on header X4 on others) 
+     = 10 - enables second decoder (for A1-0)
+     = 11 - 6545 CRTC
+
+When second decoder enabled:
+A1-0 = 00 - Port 08 (n/c?)
+     = 01 - Port 09 (n/c?)
+     = 10 - Port 0A (available on header X4)
+     = 11 - Latch ROM
+
+
+Detail by Port Number
+---------------------
+
+0x00-0x03: Z80 PIO
+           0x00: PIO Port A Data
+           0x01: PIO Port A Command
+           0x02: PIO Port B Data
+           0x03: PIO Port B Command
+           Refer datasheet
+
+
+0x04-0x07: RTC
+           A1-0 used to select registers (via IC44,45 NAND gates)
+           Refer datasheet
+          
+           available on header X4 if link L-K intact (pin 8, label "IEI/04")
+
+
+0x08:      unused?
+
+
+0x09:      unused?
+
+
+0x0A:      available on header X4 (pin 9, label "PORT A/IEO")
+
+
+0x0B:      Latch ROM
+           Enables the character ROM in place of the video RAM.
+           Also used to read a particular key on the keyboard.
+           D0 stored in IC33 (7474 flip flop)
+
+
+0x0C-0x0F: 6545 CRTC
+           0x0C/0x0E - Address/Status Register
+           0x0D/0x0F - Data Register
+           Refer datasheet
+
+
+
+NB: All ports mirrored at ((port num) + 0x10) because A4 is ignored.
+
+
+Mainboard decodes 0x00-0x1F
+
+
+
+
+
+128k Disk Coreboard
+-------------------
+
+IC30 performs decoding (along with some basic gates).
+
+Devices are enabled on the following conditions:
+
+A15-8 ignored
+A7-6 = 01
+M1 active
+
+A5-3 = 000 - Port 0x40
+       001 - Port 0x48
+       010 - Port 0x50
+       011 - Port 0x58
+       100 - Port 0x60
+       101 - Port 0x68
+       110 - unused?
+       111 - unused?
+
+
+Detail by Port Number
+---------------------
+
+0x40-0x47: FDC
+
+
+0x48-0x4B: FDC Support (all ports same function)
+           read - D7 = (DRQ+INTRQ) from FDC
+           write - sets IC29 from D3-0
+                   D1-0: drive select
+                   D2: side select
+                   D3: DDEN on FDC(active high)
+
+
+0x4C-0x4F: unused.
+
+
+0x50-0x57: memory mapping control (all ports same function)
+           write - sets IC31 from D5-0. IC31 feeds IC32 - MW168, memory mapping shiznitz
+             D0 - enable bank 1
+             D1 - enable block 2
+             D2 - disable ROMs
+             D3 - disable video-active
+             D4 - select video-active at 0x8000-0x8FFF (0xF000-0xFFFF when low)
+             D5 - enable ROM 3
+
+           video-active sets ROM/RAM driver into high impedance state and enables video memory.
+           ROMs appear if enabled and !video-active.
+           ROM 1 always appears at 0x8000, ROM 2 or 3 appears at 0xC000 depending on D5.
+           Blocks are numbered 1 and 2, banks are 0 and 1.  D1-0 select 32k block at 0x0000:
+                 D 2 1 0
+                   0 0 0      Bank 0, Block 1
+                   0 0 1      Bank 1, Block 1
+                   0 1 0      Bank 0, Block 2
+                   0 1 1      Bank 1, Block 2
+                   1 0 0      Bank 0, Block 2
+                   1 0 1      Bank 1, Block 2
+                   1 1 0      Bank 0, Block 1
+                   1 1 1      Bank 1, Block 1
+
+           When ROMs are disabled, Bank 0 Block 1 appears at 0x8000-0xFFFF
+           read - undefined
+
+
+0x58-0x5F: (all ports same function)
+           write - sets IC47 from D3-0.  IC47 feeds nothing (prob. used for checkpoint during testing).
+           read - undefined
+
+
+0x60-0x67: IC41 (all ports same function)
+
+
+0x68-0x6F: unused?
+
+
