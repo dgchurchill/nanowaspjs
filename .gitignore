@@ -1,8 +1,5 @@
 # data.js contains ROMs, saved state, etc
 .DS_Store
-data
-tools
-debug
-release
-*.sublime-workspace
-
+node_modules/
+dist/software/
+dist/bundle.js

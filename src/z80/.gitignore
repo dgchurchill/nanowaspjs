@@ -1,0 +1,5 @@
+*.jscpp
+z80.ts
+!z80.jscpp
+!z80_macros.jscpp
+!z80_ops.jscpp

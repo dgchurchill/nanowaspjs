@@ -64,22 +64,13 @@ $(COREDIR)/nanowasp.js: $(NANOWASP_JS) | $(COREDIR)
 	cat $(NANOWASP_JS) | $(YUI) > $@
 	gzip -c $@ > $@.gz
 
-$(COREDIR)/z80.js: $(Z80_JS) | $(COREDIR) z80
-	cat $(Z80_JS) | $(YUI) > $@
-	gzip -c $@ > $@.gz
-
-$(COREDIR)/data.js: $(OBJDIR)/nanowasp-data.js | $(COREDIR)
-	cat $< | $(YUI) > $@
-	gzip -c $@ > $@.gz
-
-$(OBJDIR)/nanowasp-data.js: $(ROMS_JS) | $(OBJDIR)
-	echo "var nanowasp = nanowasp || {};" > $@
-	echo "nanowasp.data = {};" >> $@
-	echo "nanowasp.data.roms = {};" >> $@
+$(OBJDIR)/nanowasp-data.ts: $(ROMS_JS) | $(OBJDIR)
+	echo "export var data = {};" >> $@
+	echo "data.roms = {};" >> $@
 	cat $(ROMS_JS:%="%") >> $@
 
-$(OBJDIR)/%.js: data/roms/%.rom | $(OBJDIR)
-	echo "nanowasp.data.roms['$*'] = \"$$(openssl base64 -in "$<" | sed -e "$$ ! s/$$/\\\\/")\";" > "$@"
+$(OBJDIR)/%.ts: data/roms/%.rom | $(OBJDIR)
+	echo "data.roms['$*'] = \"$$(openssl base64 -in "$<" | sed -e "$$ ! s/$$/\\\\/")\";" > "$@"
 
 z80/disassembler_dicts.js: z80/gen_disassembler_dicts.py
 	python $< > $@

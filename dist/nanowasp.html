@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link href="main.css" rel="stylesheet" type="text/css">
+<link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+<title>NanoWasp - A MicroBee Emulator</title>
+
+<!-- <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-25092078-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script> -->
+</head>
+
+<body>
+<div id="application">
+	<menu id="controls">
+	    <li>
+	        <div><a href="#documentation">Help</a></div>
+	    </li>
+	    <li>
+	        <div><span id="reset_button" class="link">Reset</span></div>
+	    </li>
+	    <li>
+	        <div><span id="debugger_button" class="link">Show Debugger</span></div>
+	    </li>
+	    <li id="settings_menu">
+	    	<div id="settings_menuitem">
+	    		<span class="link">Settings</span>
+	    	</div>
+	    	<div class="dropdown">
+	    		<menu>
+	    			<li class="menuitem">
+	    				<label><input type="checkbox" id="run_in_background">Run in background</label>
+	    			</li>
+	    			<li class="menuitem last">
+	    				<label><input type="radio" name="keyboard_mode" id="keyboard_mode_natural" value="natural" checked="checked">Natural keyboard</label><br>
+	    				<label><input type="radio" name="keyboard_mode" id="keyboard_mode_strict" value="strict">Strict keyboard</label>
+	    			</li>	    			
+	    		</menu>
+	    	</div>
+	    </li>
+	    <li id="tape_menu">
+	        <div id="tape_menuitem">
+	            <span class="link">Tape: <span id="selected_tape_name"></span> <span id="tape_loading" style="display: none;">loading...</span></span>
+	        </div>
+	        <div class="dropdown">
+		        <menu id="tapes">
+		        </menu>
+		        <div class="menuitem last">
+		            Add files:<br />
+	                <input id="tape_file" type="file" multiple></input>
+	            </div>
+	        </div>
+	    </li>
+	    
+	    <li class="right">
+	        <div>Updated #UPDATE_DATE# (<a href="https://github.com/dgchurchill/nanowaspjs/commits/#VERSION#">#VERSION#</a>)</span></div>
+	    </li>
+	
+	    <li style="float: none;"><div><!-- and a delicious center --></div></li>
+	</menu>
+	
+	<div style="height: 935px;"><!--This div ensures the containing div is tall enough to fit the absolutely positioned monitor div. --></div>
+	<div style="position: absolute; bottom: 0; width: 100%;">
+		<div style="width: 1000px; position: relative; margin: 0 auto;">
+		    <img src="monitor.jpg" width="1000" height="897" style="display: block;" />
+		    
+		    <div style="width: 100%; position: absolute; top: 150px;">
+		        <div style="width:640px; position: relative; margin: 0 auto;">
+                   <div id="debugger" class="hidden" style="position: absolute; z-index: 1; left: 640px;">
+                      <pre id="registers"></pre>
+                   </div>
+		        
+		           <noscript>
+                      <div class="error">NanoWasp relies on JavaScript. Please enable JavaScript if it's disabled, or switch to a browser that supports JavaScript.</div>    
+                   </noscript>
+		           <canvas id="vdu" width="640" height="400" style="width: 640px; height: 450px;"></canvas>
+		        </div>
+		    </div>
+		</div>
+	</div>
+</div>
+
+<div id="documentation">
+
+<div class="content">
+
+<h1>Notices</h1>
+<p>
+Microbee hardware is now available from <a href="http://www.microbeetechnology.com.au/">Microbee Technology</a>!
+</p>
+
+</div>
+
+<div class="content">
+
+<h1>About</h1>
+<p>
+NanoWasp is an emulator for the <a href="http://en.wikipedia.org/wiki/MicroBee">MicroBee</a> computer.
+The MicroBee was popular in Australia in the mid 1980s.
+NanoWasp requires a relatively recent browser with JavaScript enabled.
+</p>
+
+</div>
+
+<div class="content">
+
+<h1>Quick Start</h1>
+<ol>
+<li>Select a tape from the "Tape:" menu.</li>
+<li>Type "load" and press Return.</li>
+<li>Type "run" and press Return.</li>
+</ol>
+</div>
+
+<div class="content">
+<h1>Keyboard Modes</h1>
+<h2>Natural keyboard</h2>
+<p>
+The layout of the MicroBee keyboard differs from that of modern keyboards.
+For ease of use, NanoWasp defaults to using a "Natural keyboard" mapping.
+In this mode, characters entered are automatically translated to the appropriate MicroBee key presses and releases.
+To enter an asterisk, e.g., simply enter it as you would in any other program.
+You can also paste text when in this mode (Chrome only).
+The natural keyboard mode works well for most programs, so use it if you can.
+</p>
+<h2>Strict keyboard</h2>
+<p>
+Some programs, however, care about the physical key presses and releases rather than the logical character.
+For these programs, use the "Settings" menu to select the "Strict keyboard" mapping.
+In the strict mode, each key on the keyboard is mapped one-to-one to a key on the MicroBee keyboard.
+When a key is pressed, the corresponding emulated MicroBee key will be pressed.
+Ditto for when keys are released.
+Most characters can still be entered using the usual key; however, punctuation characters are laid out differently on a MicroBee keyboard.
+The following table shows the mapping for these characters when in strict mode:
+</p>
+ 
+<table style="display: inline-table;">
+   <tr><th>Character</th><th>Key Sequence</th></tr>
+   <tr class="odd"><td>!</td><td>Shift-1</td></tr>
+   <tr><td>"</td><td>Shift-2</td></tr>
+   <tr class="odd"><td>#</td><td>Shift-3</td></tr>
+   <tr><td>$</td><td>Shift-4</td></tr>
+   <tr class="odd"><td>%</td><td>Shift-5</td></tr>
+   <tr><td>&amp;</td><td>Shift-6</td></tr>
+   <tr class="odd"><td>'</td><td>Shift-7</td></tr>
+   <tr><td>(</td><td>Shift-8</td></tr>
+   <tr class="odd"><td>)</td><td>Shift-9</td></tr>
+   <tr class="last"><td>Line Feed</td><td>PageDown</td></tr>
+</table>
+   
+<table style="display: inline-table;">
+   <tr><th>Character</th><th>Key Sequence</th></tr>
+   <tr class="odd"><td>:</td><td>;</td></tr>
+   <tr><td>*</td><td>Shift-;</td></tr>
+   <tr class="odd"><td>=</td><td>Shift--</td></tr>
+   <tr><td>^</td><td>`</td></tr>
+   <tr class="odd"><td>~</td><td>Shift-`</td></tr>
+   <tr><td>;</td><td>=</td></tr>
+   <tr class="odd"><td>+</td><td>Shift-=</td></tr>
+   <tr><td>@</td><td>'</td></tr>
+   <tr class="odd"><td>`</td><td>Shift-'</td></tr>
+   <tr class="last"><td>Break</td><td>End</td></tr>
+</table>
+
+</div>
+
+<div class="content">
+<h1>Acknowledgements</h1>
+
+<p>
+The Z80 CPU emulation code comes from <a href="http://matt.west.co.tt/">Matt Westcott's</a> 
+<a href="http://matt.west.co.tt/spectrum/jsspeccy/">JSSpeccy</a> project, a ZX Spectrum
+emulator written in JavaScript.  It was ported from the 
+<a href="http://fuse-emulator.sourceforge.net/">Fuse</a> project.
+Some ideas have also been incorporated from Stewart Kay's <a href="http://freshmeat.net/projects/ubee512">uBee512</a> emulator.
+Resources and feedback from the people at both the <a href="http://www.microbee-mspp.org.au/">MicroBee Software Preservation Project</a> and the <a href="http://microbee.com.au/shell/">Bee Board</a> 
+have been invaluable over the course of developing earlier versions of NanoWasp and the current JavaScript incarnation. 
+</p>
+
+</div>
+
+<div class="content">
+<h1>Original Software</h1>
+<p>
+The MicroWorld Basic V5.22e ROM and the MicroBee Font ROM are used on this site with
+kind permission from Ewan J. Wordsworth of <a href="http://www.microbeetechnology.com.au/">Microbee Technology</a>.
+</p>
+<p>
+Depth Charge, Laser Blaster, Space Lanes, and Robot Fire are used with kind permission from
+Brad Robinson of <a href="http://www.toptensoftware.com/">Topten Software</a>.
+</p>
+<p>
+Bounce, Break Out, Catack, Catter, Earth, Isbok Adventure, Mazes!, Othello, and Pucker are used with kind permission from Richard Larkin.
+</p>
+<p>
+Some other original MicroBee software is also accessible through this site.
+This software is believed to be in the public domain or otherwise distributable.
+It is made available here non-commercially and solely to preserve this piece of Australian computing history.
+If you have any queries regarding the original software accessible though this site please contact me at the email address below.
+</p>
+</div>
+
+<div class="content">
+<h1>Source Code</h1>
+<p>
+The NanoWasp source code is released under the <a href="http://www.gnu.org/licenses/gpl-3.0.html">GPLv3 license</a>.
+The main Git repository can be found <a href="https://github.com/dgchurchill/nanowaspjs">here</a>.
+You may also be interested in the <a href="http://www.nanowasp.org/old/">old standalone version</a> and its
+<a href="http://www.sourceforge.net/projects/nanowasp/">SourceForge project page</a>.
+</p>
+
+</div>
+
+<div class="content">
+<img src="http://www.gravatar.com/avatar/8999d510cebee2fd094e0748a0f69370?s=100" width="100" height="100" class="float-left" />
+<h1>Contact</h1>
+<p>NanoWasp was written by Dave Churchill.
+Please send any feedback to <a href="mailto:nanowasp@ninthcuriosity.com">nanowasp@ninthcuriosity.com</a>.</p>
+
+</div>
+
+<div class="content">
+<h1>Privacy</h1>
+<p>
+No personally identifiable information is collected by this site.
+However, cookies are used to gather anonymous usage statistics via Google Analytics.
+Information about privacy with regard to Google Analytics can be found
+ <a href="http://www.google.com/intl/en/analytics/privacyoverview.html">here</a>.
+Additionally, like most websites, the IP address of the device you use to access the site may be recorded.
+</p>
+
+</div>
+
+</div>
+
+<div id="messages" style="position: fixed; left: 0; right: 0; bottom: 0;">
+	<div id="error" style="background: #ff8080; color: #300000; border-top: solid 1px black; padding: 15px; display: none;">
+		<div style="float: right; margin-right: 15px"><span id="hide_error_button" class="link" style="color: #C00000; font-weight: bold;">x</a></div>
+		<div id="error_message" style="margin: 0 50px"></div>
+	</div>
+	<div id="notice" style="background: beige; border-top: solid 1px black; padding: 15px; text-align: center; display: none;">
+		<div style="float: right; margin-right: 15px"><span id="hide_notice_button" class="link" style="font-weight: bold;">x</a></div>
+	</div>
+</div>
+
+<script src="bundle.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "name": "nanowaspjs",
+  "version": "1.16.0",
+  "description": "NanoWasp JS",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dgchurchill/nanowaspjs.git"
+  },
+  "author": "Dave Churchill",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/dgchurchill/nanowaspjs/issues"
+  },
+  "homepage": "https://github.com/dgchurchill/nanowaspjs#readme",
+  "devDependencies": {
+    "@types/file-saver": "1.3.0",
+    "ts-loader": "4.3.0",
+    "typescript": "2.8.3",
+    "webpack": "4.8.3",
+    "webpack-cli": "2.1.3",
+    "webpack-dev-server": "3.1.4"
+  },
+  "dependencies": {
+    "file-saver": "1.3.8"
+  }
+}
