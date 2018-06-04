@@ -19,47 +19,87 @@
 
 import { MicroBee } from './microbee'
 import { Keyboard } from './keyboard'
-import { CrtcMemory } from './crtcmemory'
-import * as utils from './utils'
+import { CrtcMemory, BACKGROUND_COLOR_CSS, CHAR_WIDTH } from './crtcmemory'
+import { BinaryReader, getBits, copyBits, listsMatch } from './utils';
+
+const enum RegisterIndex {
+    HTot = 0,
+    HDisp = 1,
+    HSyncPos = 2,
+    SyncWidth = 3,
+    VTot = 4,
+    VTotAdj = 5,
+    VDisp = 6,
+    VSyncPos = 7,
+    Mode = 8,
+    Scanlines = 9,
+    CursorStart = 10,
+    CursorEnd = 11,
+    DispStartH = 12,
+    DispStartL = 13,
+    CursorPosH = 14,
+    CursorPosL = 15,
+    LPenH = 16,
+    LPenL = 17,
+    SetAddrH = 18,
+    SetAddrL = 19,
+    
+    DoSetAddr = 31,
+    NumRegs = 32
+}
+
+const enum PortIndex {
+    Address = 0,
+    Status = 0,
+    Data = 1,
+    NumPorts = 2
+}
+
+const enum CursorMode {
+    NoBlink = 0,
+    NoCursor = 1,
+    Blink16 = 2,
+    Blink32 = 3
+}
 
 export class Crtc {
     _graphicsContext: CanvasRenderingContext2D;
 
-    _selectedRegister: number;
+    _selectedRegister: number = 0;
 
-    _lpenValid: boolean;
-    _lpen: number;
+    _lpenValid: boolean = false;
+    _lpen: number = 0;
 
-    _emulationTime: number;
-    _lastFrameTime: number;
+    _emulationTime: number = 0;
+    _lastFrameTime: number = 0;
 
-    _frameTime: number;
-    _vblankTime: number;
+    _frameTime: number = 0;
+    _vblankTime: number = 0;
 
-    _cursorPosition: number;
-    _cursorStart: number;
-    _cursorEnd: number;
-    _cursorMode: number;
+    _cursorPosition: number = 0;
+    _cursorStart: number = 0;
+    _cursorEnd: number = 0;
+    _cursorMode: number = 0;
     _cursorOn = false;
-    _blinkRate: number;
-    _frameCounter: number;
+    _blinkRate: number = 0;
+    _frameCounter: number = 0;
     
-    _displayStart: number;
-    _hTotal: number;
-    _hDisplayed: number;
-    _vTotal: number;
-    _vTotalAdjustment: number;
-    _vDisplayed: number;
-    _scansPerRow: number;
+    _displayStart: number = 0;
+    _hTotal: number = 0;
+    _hDisplayed: number = 0;
+    _vTotal: number = 0;
+    _vTotalAdjustment: number = 0;
+    _vDisplayed: number = 0;
+    _scansPerRow: number = 0;
     
-    _memoryAddress: number;
+    _memoryAddress: number = 0;
     
-    _previousRenderState: number[];  // Used to determine if any state has changed that should force a full render.
-    _lastCursorPosition: number;
+    _previousRenderState: number[] = [];  // Used to determine if any state has changed that should force a full render.
+    _lastCursorPosition: number = 0;
 
-    _microbee: MicroBee;
-    _keyboard: Keyboard;
-    _crtcMemory: CrtcMemory;
+    _microbee!: MicroBee;
+    _keyboard!: Keyboard;
+    _crtcMemory!: CrtcMemory;
 
     constructor(graphicsContext: CanvasRenderingContext2D) {
         this.reset();
@@ -81,7 +121,7 @@ export class Crtc {
         this._cursorPosition = 0;
         this._cursorStart = 0;
         this._cursorEnd = 0;
-        this._cursorMode = Crtc.CursorMode.NoBlink;
+        this._cursorMode = CursorMode.NoBlink;
         this._cursorOn = false;
         this._blinkRate = 0;
         this._frameCounter = 0;
@@ -100,7 +140,7 @@ export class Crtc {
         this._lastCursorPosition = 0;
     }
     
-    restoreState(state) {
+    restoreState(state: BinaryReader) {
         this._selectedRegister = state.readByte();
         
         this._memoryAddress = state.readWord();
@@ -128,7 +168,7 @@ export class Crtc {
     }
     
     getSize() {
-        return Crtc.PortIndex.NumPorts;
+        return PortIndex.NumPorts;
     }
 
     connect(microbee: MicroBee, keyboard: Keyboard, crtcMemory: CrtcMemory) {
@@ -137,9 +177,9 @@ export class Crtc {
         this._crtcMemory = crtcMemory;
     }
     
-    read(address) {
-        switch (address % Crtc.PortIndex.NumPorts) {
-        case Crtc.PortIndex.Status:
+    read(address: number) {
+        switch (address % PortIndex.NumPorts) {
+        case PortIndex.Status:
             var STATUS_STROBE = 0x80;
             var STATUS_LPEN = 0x40;
             var STATUS_VBLANK = 0x20;
@@ -160,21 +200,21 @@ export class Crtc {
             
             return status;
             
-        case Crtc.PortIndex.Data:
+        case PortIndex.Data:
             switch (this._selectedRegister) {
-            case Crtc.RegisterIndex.CursorPosH:
-                return utils.getBits(this._cursorPosition, 8, 6);
+            case RegisterIndex.CursorPosH:
+                return getBits(this._cursorPosition, 8, 6);
 
-            case Crtc.RegisterIndex.CursorPosL:
-                return utils.getBits(this._cursorPosition, 0, 8);
+            case RegisterIndex.CursorPosL:
+                return getBits(this._cursorPosition, 0, 8);
 
-            case Crtc.RegisterIndex.LPenH:
+            case RegisterIndex.LPenH:
                 this._lpenValid = false;
-                return utils.getBits(this._lpen, 8, 6);
+                return getBits(this._lpen, 8, 6);
 
-            case Crtc.RegisterIndex.LPenL:
+            case RegisterIndex.LPenL:
                 this._lpenValid = false;
-                return utils.getBits(this._lpen, 0, 8);
+                return getBits(this._lpen, 0, 8);
             
             default:
                 return 0xFF;
@@ -185,98 +225,98 @@ export class Crtc {
         }
     }
     
-    write(address, value) {
-        switch (address % Crtc.PortIndex.NumPorts) {
-        case Crtc.PortIndex.Address:
-            this._selectedRegister = value % Crtc.RegisterIndex.NumRegs;
+    write(address: number, value: number) {
+        switch (address % PortIndex.NumPorts) {
+        case PortIndex.Address:
+            this._selectedRegister = value % RegisterIndex.NumRegs;
             break;
             
-        case Crtc.PortIndex.Data:
+        case PortIndex.Data:
             switch (this._selectedRegister) {
-            case Crtc.RegisterIndex.HTot:
+            case RegisterIndex.HTot:
                  this._hTotal = value + 1;
                  this._calculateVBlank();
                  break;
 
-             case Crtc.RegisterIndex.HDisp:
+             case RegisterIndex.HDisp:
                  this._hDisplayed = value;
                  break;
 
-             case Crtc.RegisterIndex.VTot:
-                 this._vTotal = utils.getBits(value, 0, 7) + 1;
+             case RegisterIndex.VTot:
+                 this._vTotal = getBits(value, 0, 7) + 1;
                  this._calculateVBlank();
                  break;
 
-             case Crtc.RegisterIndex.VTotAdj:
-                 this._vTotalAdjustment = utils.getBits(value, 0, 5);
+             case RegisterIndex.VTotAdj:
+                 this._vTotalAdjustment = getBits(value, 0, 5);
                  this._calculateVBlank();
                  break;
 
-             case Crtc.RegisterIndex.VDisp:
-                 this._vDisplayed = utils.getBits(value, 0, 7);
+             case RegisterIndex.VDisp:
+                 this._vDisplayed = getBits(value, 0, 7);
                  break;
 
-             case Crtc.RegisterIndex.Scanlines:
-                 this._scansPerRow = utils.getBits(value, 0, 5) + 1;
+             case RegisterIndex.Scanlines:
+                 this._scansPerRow = getBits(value, 0, 5) + 1;
                  this._calculateVBlank();
                  break;
 
-             case Crtc.RegisterIndex.CursorStart:
+             case RegisterIndex.CursorStart:
                  var BLINK_MODE_OFFSET = 5;   
                  
-                 this._cursorStart = utils.getBits(value, 0, 5);
-                 this._cursorMode = utils.getBits(value, BLINK_MODE_OFFSET, 2);
+                 this._cursorStart = getBits(value, 0, 5);
+                 this._cursorMode = getBits(value, BLINK_MODE_OFFSET, 2);
                  
                  switch (this._cursorMode) {
-                 case Crtc.CursorMode.NoBlink:
+                 case CursorMode.NoBlink:
                       this._cursorOn = true;
                       this._blinkRate = 0;
                       break; 
 
-                 case Crtc.CursorMode.NoCursor:
+                 case CursorMode.NoCursor:
                       this._cursorOn = false;
                       this._blinkRate = 0;
                       break;
 
-                 case Crtc.CursorMode.Blink16:
+                 case CursorMode.Blink16:
                       this._blinkRate = 16;
                       break;
 
-                 case Crtc.CursorMode.Blink32:
+                 case CursorMode.Blink32:
                       this._blinkRate = 32;
                       break;
                  }
                  break;
 
-             case Crtc.RegisterIndex.CursorEnd:
-                 this._cursorEnd = utils.getBits(value, 0, 5);
+             case RegisterIndex.CursorEnd:
+                 this._cursorEnd = getBits(value, 0, 5);
                  break;
 
-             case Crtc.RegisterIndex.DispStartH:
-                 this._displayStart = utils.copyBits(this._displayStart, 8, 6, value);
+             case RegisterIndex.DispStartH:
+                 this._displayStart = copyBits(this._displayStart, 8, 6, value);
                  break;
 
-             case Crtc.RegisterIndex.DispStartL:
-                 this._displayStart = utils.copyBits(this._displayStart, 0, 8, value);
+             case RegisterIndex.DispStartL:
+                 this._displayStart = copyBits(this._displayStart, 0, 8, value);
                  break;
 
-             case Crtc.RegisterIndex.CursorPosH:
-                 this._cursorPosition = utils.copyBits(this._cursorPosition, 8, 6, value);
+             case RegisterIndex.CursorPosH:
+                 this._cursorPosition = copyBits(this._cursorPosition, 8, 6, value);
                  break;
 
-             case Crtc.RegisterIndex.CursorPosL:
-                 this._cursorPosition = utils.copyBits(this._cursorPosition, 0, 8, value);
+             case RegisterIndex.CursorPosL:
+                 this._cursorPosition = copyBits(this._cursorPosition, 0, 8, value);
                  break;
 
-             case Crtc.RegisterIndex.SetAddrH:
-                 this._memoryAddress = utils.copyBits(this._memoryAddress, 8, 6, value);
+             case RegisterIndex.SetAddrH:
+                 this._memoryAddress = copyBits(this._memoryAddress, 8, 6, value);
                  break;
 
-             case Crtc.RegisterIndex.SetAddrL:
-                 this._memoryAddress = utils.copyBits(this._memoryAddress, 0, 8, value);
+             case RegisterIndex.SetAddrL:
+                 this._memoryAddress = copyBits(this._memoryAddress, 0, 8, value);
                  break;
 
-             case Crtc.RegisterIndex.DoSetAddr:
+             case RegisterIndex.DoSetAddr:
                  this._keyboard.check(this._memoryAddress);
                  break;
             }
@@ -284,7 +324,7 @@ export class Crtc {
         }
     }
     
-    execute(time, duration) {
+    execute(time: number, duration: number) {
         this._emulationTime = time + duration;  // Time to update up to.
         var delta = this._emulationTime - this._lastFrameTime;
         
@@ -303,7 +343,7 @@ export class Crtc {
         return this._lastFrameTime + this._frameTime - this._emulationTime;
     }
     
-    triggerLpen(address) {
+    triggerLpen(address: number) {
         if (this._lpenValid) {
             return;  // Already triggered, ignore new triggers until previous value is read.
         }
@@ -319,7 +359,7 @@ export class Crtc {
     _calculateVBlank() {
         var CHAR_CLOCK_HZ = 1687500; 
 
-        this._graphicsContext.canvas.width = this._hDisplayed * CrtcMemory.CHAR_WIDTH;
+        this._graphicsContext.canvas.width = this._hDisplayed * CHAR_WIDTH;
         this._graphicsContext.canvas.height = this._vDisplayed * this._scansPerRow;
         
         this._frameTime = this._hTotal * (this._vTotal * this._scansPerRow + this._vTotalAdjustment) * 1000000 / CHAR_CLOCK_HZ;
@@ -333,13 +373,13 @@ export class Crtc {
     _render() {
         var newRenderState = [this._displayStart, this._vDisplayed, this._hDisplayed, this._scansPerRow];
         var fullRenderRequired = false;
-        if (!utils.listsMatch(this._previousRenderState, newRenderState)) {
+        if (!listsMatch(this._previousRenderState, newRenderState)) {
             fullRenderRequired = true;
             this._previousRenderState = newRenderState;
         }
         
         if (fullRenderRequired) {
-            this._graphicsContext.fillStyle = CrtcMemory.BACKGROUND_COLOR_CSS;
+            this._graphicsContext.fillStyle = BACKGROUND_COLOR_CSS;
             this._graphicsContext.fillRect(0, 0, this._graphicsContext.canvas.width, this._graphicsContext.canvas.height);
         }
     
@@ -348,17 +388,17 @@ export class Crtc {
         var y = 0;
         for (var row = 0; row < this._vDisplayed; ++row) {
             for (var column = 0; column < this._hDisplayed; ++column) {
-                var cursor = null;
+                var cursor: [number, number]|null = null;
                 if (this._cursorOn && address == this._cursorPosition) {
                     cursor = [this._cursorStart, this._cursorEnd];
                 }
                 
                 if (fullRenderRequired || cursor != null || address == this._lastCursorPosition || this._crtcMemory.isDirty(address)) {
                     var characterImage = this._crtcMemory.getCharacterData(address, this._scansPerRow, cursor);
-                    this._graphicsContext.putImageData(characterImage, x, y, 0, 0, CrtcMemory.CHAR_WIDTH, this._scansPerRow);
+                    this._graphicsContext.putImageData(characterImage, x, y, 0, 0, CHAR_WIDTH, this._scansPerRow);
                 }
 
-                x += CrtcMemory.CHAR_WIDTH;
+                x += CHAR_WIDTH;
                 var CRTC_ADDRESS_SIZE = 16384;
                 address = (address + 1) % CRTC_ADDRESS_SIZE; 
             }
@@ -369,45 +409,5 @@ export class Crtc {
         
         this._lastCursorPosition = this._cursorPosition;
         this._crtcMemory.clearDirtyStatus();
-    }
-
-    static RegisterIndex = {
-        HTot:        0,
-        HDisp:       1,
-        HSyncPos:    2,
-        SyncWidth:   3,
-        VTot:        4,
-        VTotAdj:     5,
-        VDisp:       6,
-        VSyncPos:    7,
-        Mode:        8,
-        Scanlines:   9,
-        CursorStart: 10,
-        CursorEnd:   11,
-        DispStartH:  12,
-        DispStartL:  13,
-        CursorPosH:  14,
-        CursorPosL:  15,
-        LPenH:       16,
-        LPenL:       17,
-        SetAddrH:    18,
-        SetAddrL:    19,
-        
-        DoSetAddr:   31,
-        NumRegs:     32
-    }
-    
-    static PortIndex = {
-        Address:  0,
-        Status:   0,
-        Data:     1,
-        NumPorts: 2
-    }
-    
-    static CursorMode = {
-        NoBlink:  0,
-        NoCursor: 1,
-        Blink16:  2,
-        Blink32:  3
     }
 }

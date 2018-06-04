@@ -36,15 +36,32 @@ var overflow_sub_table = [ 0, FLAG_V, 0, 0, 0, 0, FLAG_V, 0 ];
 
 /* Some more tables; initialised in z80_init_tables() */
 
-var sz53_table = []; /* The S, Z, 5 and 3 bits of the index */
-var parity_table = []; /* The parity of the lookup value */
-var sz53p_table = []; /* OR the above two tables together */
+var sz53_table: number[] = []; /* The S, Z, 5 and 3 bits of the index */
+var parity_table: number[] = []; /* The parity of the lookup value */
+var sz53p_table: number[] = []; /* OR the above two tables together */
 
 /* This is what everything acts on! */
 export interface Z80 {
-	a, f, b, c, d, e, h, l: number;
-	a_, f_, b_, c_, d_, e_, h_, l_: number;
-	ixh, ixl, iyh, iyl: number;
+	a: number;
+  f: number;
+  b: number;
+  c: number;
+  d: number;
+  e: number;
+  h: number;
+  l: number;
+	a_: number;
+  f_: number;
+  b_: number;
+  c_: number;
+  d_: number;
+  e_: number;
+  h_: number;
+  l_: number;
+	ixh: number;
+  ixl: number;
+  iyh: number;
+  iyl: number;
   i: number;
 
   /* The low seven bits of the R register. 16 bits long
@@ -54,8 +71,11 @@ export interface Z80 {
   /* The high bit of the R register */
   r7: number;
 
-	sp, pc: number;
-  iff1, iff2, im: number;
+	sp: number;
+  pc: number;
+  iff1: number;
+  iff2: number;
+  im: number;
   halted: boolean;
 
   tstates: number;
@@ -64,6 +84,8 @@ export interface Z80 {
   writebyte_internal: (address: number, value: number) => void;
   readport: (address: number) => number;
   writeport: (address: number, value: number) => void;
+
+  breakpoints: { [address: number]: () => void };
 }
 
 /* Initalise the tables used to set flags */
@@ -101,19 +123,19 @@ export function z80_init(
 }
 
 /* Reset the z80 */
-export function z80_reset(z80) {
+export function z80_reset(z80: Z80) {
   A =F =B =C =D =E =H =L =0;
   A_ =F_ =B_ =C_ =D_ =E_=H_ =L_=0;
   IXH=IXL=IYH=IYL=0;
   I=R=R7=0;
   SP=PC=0;
   IFF1=IFF2=IM=0;
-  z80.halted=0;
+  z80.halted=false;
   z80_clear_breakpoints(z80);
 }
 
 /* Process a z80 maskable interrupt */
-function z80_interrupt(z80) {
+function z80_interrupt(z80: Z80) {
   /* Process if IFF1 set && (if a Timex machine, SCLD INTDISABLE is clear) */
   if( IFF1 ) {
     
@@ -146,7 +168,7 @@ function z80_interrupt(z80) {
 }
 
 /* Process a z80 non-maskable interrupt */
-function z80_nmi(z80) {
+function z80_nmi(z80: Z80) {
   /* FIXME: what happens if the z80 is HALTed? */
 
   IFF1 = 0;

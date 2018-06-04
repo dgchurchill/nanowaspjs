@@ -17,7 +17,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { getBit } from './utils'
+import { getBit, BinaryReader } from './utils'
 
 export class LatchRom {
     _isLatched: boolean;
@@ -30,15 +30,15 @@ export class LatchRom {
         this._isLatched = false;
     }
         
-    restoreState(state) {
+    restoreState(state: BinaryReader) {
         this._isLatched = state.readBool();
     }
     
-    read(address) {
+    read(address: number) {
         return 0;  // Cannot be read
     }
     
-    write(address, value) {
+    write(address: number, value: number) {
         this._isLatched = getBit(value, 0) == 1;
     }
     

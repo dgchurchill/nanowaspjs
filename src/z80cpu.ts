@@ -20,13 +20,16 @@
 /* Functions called by the z80 emulation code */
 
 import { Z80, z80_init, z80_reset, z80_do_opcodes, z80_set_breakpoint, z80_clear_breakpoints, z80_ret } from './z80/z80';
+import { BinaryReader } from './utils';
+
+interface Device {
+    read: (address: number) => number;
+    write: (address: number, value: number) => void;
+    getSize: () => number;
+}
 
 interface Handler {
-    handler: {
-        read: (address: number) => number;
-        write: (address: number, value: number) => void;
-    }
-
+    handler: Device;
     base: number;
 }
 
@@ -48,8 +51,9 @@ export class Z80Cpu {
         z80_reset(this._z80);
         
         var nullHandler = {
-            read: (address) => 0,
-            write: (address, value) => undefined
+            read: (address: number) => 0,
+            write: (address: number, value: number) => undefined,
+            getSize: () => 0
         };
         
         this._memoryBlockSize = Z80Cpu.MEMORY_SIZE;
@@ -85,7 +89,7 @@ export class Z80Cpu {
         entry.handler.write(address - entry.base, value);    
     }
 
-    restoreState(state) {
+    restoreState(state: BinaryReader) {
         this._z80.f = state.readByte();
         this._z80.a = state.readByte();
         this._z80.c = state.readByte();
@@ -121,7 +125,7 @@ export class Z80Cpu {
         this._z80.im = state.readByte();
     }
     
-    execute(time, duration) {
+    execute(time: number, duration: number) {
         this._z80.tstates = 0;
         let event_next_event = duration * Z80Cpu.FREQUENCY_HZ / 1000000;  // TODO: Should check how many cycles we did last time and adjust this.  See original C++ code.
         z80_do_opcodes(this._z80, event_next_event);
@@ -132,7 +136,7 @@ export class Z80Cpu {
         return this._z80.tstates * 1000000 / Z80Cpu.FREQUENCY_HZ;
     }
     
-    setBreakpoint(address, handler) {
+    setBreakpoint(address: number, handler: () => void) {
         z80_set_breakpoint(this._z80, address, handler);
     }
     
@@ -140,19 +144,19 @@ export class Z80Cpu {
         z80_clear_breakpoints(this._z80);
     }
     
-    registerMemoryDevice(address, handler) {
+    registerMemoryDevice(address: number, handler: Device) {
         var updated = this._registerDevice(address, handler, Z80Cpu.MEMORY_SIZE, this._memoryBlockSize, this._memoryHandlers);
         this._memoryBlockSize = updated.blockSize;
         this._memoryHandlers = updated.handlers;
     }
     
-    registerPortDevice(address, handler) {
+    registerPortDevice(address: number, handler: Device) {
         var updated = this._registerDevice(address, handler, Z80Cpu.PORT_SIZE, this._portBlockSize, this._portHandlers);
         this._portBlockSize = updated.blockSize;
         this._portHandlers = updated.handlers;
     }
     
-    _registerDevice(address, handler, limit, blockSize, handlers) {
+    _registerDevice(address: number, handler: Device, limit: number, blockSize: number, handlers: Handler[]) {
         var start = address;
         var end = start + handler.getSize();
         

@@ -20,14 +20,15 @@
 import { Z80Cpu } from './z80cpu';
 import { CrtcMemory } from './crtcmemory';
 import { Rom, Ram } from './memory';
+import { BinaryReader } from './utils';
 
 export class MemMapper {
-    _z80: Z80Cpu;
-    _rams: Ram[];
-    _roms: Rom[];
-    _crtcMemory: CrtcMemory;
+    _z80!: Z80Cpu;
+    _rams!: Ram[];
+    _roms!: Rom[];
+    _crtcMemory!: CrtcMemory;
 
-    connect(z80, rams, roms, crtcMemory) {
+    connect(z80: Z80Cpu, rams: Ram[], roms: Rom[], crtcMemory: CrtcMemory) {
         this._z80 = z80;
         this._rams = rams;
         this._roms = roms;
@@ -38,7 +39,7 @@ export class MemMapper {
         this.write(0, 0);
     }
     
-    restoreState(state) {
+    restoreState(state: BinaryReader) {
         this.write(0, state.readByte());
     }
     
@@ -46,11 +47,11 @@ export class MemMapper {
         return 1;
     }
         
-    read(address) {
+    read(address: number) {
         return 0;  // MemMapper cannot be read.
     }
 
-    write(address, value) {
+    write(address: number, value: number) {
         var BANK_MASK = 0x07;
         var ROM_DISABLE_MASK = 0x04;
         var VIDEO_RAM_DISABLE_MASK = 0x08;

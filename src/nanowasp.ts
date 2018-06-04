@@ -25,24 +25,24 @@ import { Keyboard } from './keyboard';
 import { software } from './software';
 import { TapeView } from './tapeview';
 
-function showErrorHtml (html) {
+function showErrorHtml (html: string) {
     var error_message = document.getElementById("error_message");
-    error_message.innerHTML = html;
-    document.getElementById("error").style.display = "block";
+    error_message!.innerHTML = html;
+    document.getElementById("error")!.style.display = "block";
 };
 
-function showError (text) {
+function showError (text: string) {
     var error_message = document.getElementById("error_message");
-    error_message.innerHTML = "";
-    error_message.appendChild(document.createTextNode((new Date()).toLocaleTimeString() + " - " + text));
-    document.getElementById("error").style.display = "block";
+    error_message!.innerHTML = "";
+    error_message!.appendChild(document.createTextNode((new Date()).toLocaleTimeString() + " - " + text));
+    document.getElementById("error")!.style.display = "block";
 }
 
 class NanoWasp {
     _sendKeysToMicrobee: boolean;
     _menus: string[];
     _debugger: Debugger;
-    _tapeLoadRequest: XMLHttpRequest;
+    _tapeLoadRequest: XMLHttpRequest | null = null;
     _tapes: VirtualTape[];
 
     microbee: MicroBee;
@@ -50,23 +50,19 @@ class NanoWasp {
     constructor() {
         this._sendKeysToMicrobee = true;
         this._menus = [ "settings_menu", "tape_menu" ];
-    }
 
-    main() {
-        var this_ = this;
-
-        var performDefault = function (event) {
+        var performDefault = (event: KeyboardEvent) => {
             // Swallowing all the ctrl keys is possibly a bit obnoxious...
             // Ideally we'd only swallow them when focus is on the MicroBee, need to come up with a clean way to indicate focus.
-            var captured = this_._sendKeysToMicrobee && ((event.keyCode in Keyboard.capturedKeys) || event.ctrlKey);
+            var captured = this._sendKeysToMicrobee && ((event.keyCode in Keyboard.capturedKeys) || event.ctrlKey);
             return event.metaKey || !captured;
         };
         
         var pressedKeys: boolean[] = [];
-        var inputBuffer = [];
+        var inputBuffer: [number, boolean][] = [];
 
-        window.onkeydown = function (event) {
-            if (this_._sendKeysToMicrobee) {
+        window.onkeydown = (event) => {
+            if (this._sendKeysToMicrobee) {
                 pressedKeys[event.keyCode] = true;
 
                 if (event.ctrlKey && event.keyCode >= 'A'.charCodeAt(0) && event.keyCode <= 'Z'.charCodeAt(0)) {
@@ -83,23 +79,23 @@ class NanoWasp {
             return performDefault(event);
         };
     
-        window.onkeypress = function (event) {
-            if (this_._sendKeysToMicrobee) {
+        window.onkeypress = (event) => {
+            if (this._sendKeysToMicrobee) {
                 inputBuffer.push([event.charCode, event.ctrlKey]);
             }
 
             return performDefault(event);
         };
     
-        window.onkeyup = function (event) {
+        window.onkeyup = (event) => {
             pressedKeys[event.keyCode] = false;
             return performDefault(event);
         };
 
         window.addEventListener(
             "paste",
-            function (event: ClipboardEvent) {
-                var text = event.clipboardData.getData("text/plain");
+            (event: Event) => {
+                var text = (event as ClipboardEvent).clipboardData.getData("text/plain");
                 for (var i = 0; i < text.length; ++i) {
                     var code = text.charCodeAt(i);
                     if (code ==  0x0D) {
@@ -117,23 +113,23 @@ class NanoWasp {
             buffer: inputBuffer
         };
         
-        document.getElementById("hide_notice_button").onclick = function () {
-            document.getElementById("notice").style.display = "none";
+        document.getElementById("hide_notice_button")!.onclick = function () {
+            document.getElementById("notice")!.style.display = "none";
         };
     
-        document.getElementById("hide_error_button").onclick = function () {
-            document.getElementById("error").style.display = "none";
+        document.getElementById("hide_error_button")!.onclick = function () {
+            document.getElementById("error")!.style.display = "none";
         };
 
         var graphicsContext = (document.getElementById("vdu") as HTMLCanvasElement).getContext('2d');
         
-        this.microbee = new MicroBee(graphicsContext, keyboardContext);
+        this.microbee = new MicroBee(graphicsContext!, keyboardContext);
         var microbee = this.microbee;
         
-        var hook_menu_toggle = function(menu_id) {
-            document.getElementById(menu_id + "item").addEventListener(
+        var hook_menu_toggle = (menu_id: string) => {
+            document.getElementById(menu_id + "item")!.addEventListener(
                 "click",
-                function () { this_._toggleMenu(menu_id); },
+                () => { this._toggleMenu(menu_id); },
                 false);
         };
 
@@ -147,53 +143,52 @@ class NanoWasp {
             this._tapes.push(new VirtualTape(info.title, info.filename, info.url, info.tapeParameters));
         }
         
-        var tapeFileInput = document.getElementById("tape_file") as HTMLInputElement;
-        var update_tapes = utils.bind(this._update_tapes, this);
+        var tapeFileInput: HTMLInputElement = document.getElementById("tape_file") as HTMLInputElement;
         tapeFileInput.onchange = () => {
-            for (var i = 0; i < tapeFileInput.files.length; ++i) {
-                var file = tapeFileInput.files[i];
+            for (let i = 0; i < tapeFileInput.files!.length; ++i) {
+                let file = tapeFileInput.files![i];
                 if (file.size > 65535) {
                     continue; // TODO: Error message.
                 }
                 
-                (function (f) {
-                    var reader = new FileReader();
-                    reader.onload = (e) => {
-                        var data = utils.makeUint8Array(reader.result);
-                        this._tapes.push(new VirtualTape(f.name, f.name, data, null))
-                        update_tapes();
-                    };
-                    reader.readAsArrayBuffer(f);
-                })(file);
+                let reader = new FileReader();
+                reader.onload = (e) => {
+                    let data = utils.makeUint8Array(reader.result);
+                    this._tapes.push(new VirtualTape(file.name, file.name, data))
+                    this._update_tapes();
+                };
+                reader.readAsArrayBuffer(file);
             }
         };
         
         this._update_tapes();
         
-        this._debugger = new Debugger(this.microbee._devices.z80._z80, "registers");
-        document.getElementById("debugger_button").onclick = utils.bind(this._show_debugger, this);
+        this._debugger = new Debugger(this.microbee._devices.z80._z80, document.getElementById("registers")!);
+        document.getElementById("debugger_button")!.onclick = () => this._show_debugger();
 
-        document.getElementById("reset_button").onclick = function () { microbee.reset(); };
+        document.getElementById("reset_button")!.onclick = function () { microbee.reset(); };
         
         var keyboard_mode_strict = document.getElementById("keyboard_mode_strict") as HTMLInputElement;
-        keyboard_mode_strict.onchange = document.getElementById("keyboard_mode_natural").onchange = function () {
+        keyboard_mode_strict.onchange = document.getElementById("keyboard_mode_natural")!.onchange = function () {
             microbee.setKeyboardStrictMode(keyboard_mode_strict.checked);
         };
+    }
 
+    start() {
         var run_in_background = document.getElementById("run_in_background") as HTMLInputElement;
         
-        window.onblur = function () {
+        window.onblur = () => {
             if (!run_in_background.checked) {
-                microbee.stop();
+                this.microbee.stop();
             }
         };
 
-        window.onfocus = utils.bind(microbee.start, microbee);
+        window.onfocus = () => this.microbee.start();
     
-        microbee.start();
+        this.microbee.start();
     }
 
-    _toggleMenu(name) {
+    _toggleMenu(name: string) {
         var is_selected = false;
 
         for (var menu in this._menus) {
@@ -220,23 +215,22 @@ class NanoWasp {
             this._tapeLoadRequest.abort();
         }
         
-        var selected_tape_name = document.getElementById("selected_tape_name");
+        var selected_tape_name: HTMLElement = document.getElementById("selected_tape_name")!;
         selected_tape_name.innerHTML = "";
         selected_tape_name.appendChild(document.createTextNode(tape.title));
-        document.getElementById("tape_loading").style.display = "inline";
+        document.getElementById("tape_loading")!.style.display = "inline";
 
-        var this_ = this;
         this._tapeLoadRequest = this.microbee.loadTape(
             tape,
-            function () {
-                document.getElementById("tape_loading").style.display = "none";
-                this_._tapeLoadRequest = null;
+            () => {
+                document.getElementById("tape_loading")!.style.display = "none";
+                this._tapeLoadRequest = null;
             },
-            function (tape, request) {
+            (tape, request) => {
                 showError("Tape failed to load (" + request.status + " " + request.statusText + ")");
-                console.log(arguments);
-                document.getElementById("tape_loading").style.display = "none";
-                this_._tapeLoadRequest = null;
+                console.log(tape, request);
+                document.getElementById("tape_loading")!.style.display = "none";
+                this._tapeLoadRequest = null;
             });
     }
 
@@ -245,16 +239,13 @@ class NanoWasp {
         this._hideMenus();
     }
     
-    _onTapeEdited(tape) {
+    _onTapeEdited(tape: VirtualTape) {
         // Editing a tape causes it to be selected and rewound because
         // the user most probably wants to load it after editing it.
         this._loadTape(tape);
     }
 
     _update_tapes() {    
-        var onTapeSelected = utils.bind(this._onTapeSelected, this);
-        var onTapeEdited = utils.bind(this._onTapeEdited, this);
-
         var tapeItems = document.createDocumentFragment();
 
         for (var name in this._tapes) {
@@ -262,12 +253,12 @@ class NanoWasp {
             li.className = "menuitem";
             
             // Reference to TapeView instance is maintained through the DOM
-            new TapeView(this._tapes[name], li, onTapeSelected, onTapeEdited);
+            new TapeView(this._tapes[name], li, (t) => this._onTapeSelected(t), (t) => this._onTapeEdited(t));
             
             tapeItems.appendChild(li);
         }
         
-        var tapesMenu = document.getElementById("tapes");
+        var tapesMenu = document.getElementById("tapes")!;
         tapesMenu.innerHTML = "";
         tapesMenu.appendChild(tapeItems);
     }
@@ -279,17 +270,17 @@ class NanoWasp {
         this.microbee.setSliceDoneCallback(function() {
             debug.update(); 
         });
-        var button = document.getElementById("debugger_button");
+        var button = document.getElementById("debugger_button")!;
         utils.setTextContent(button, "Hide Debugger");
-        button.onclick = utils.bind(this._hide_debugger, this);
+        button.onclick = () => this._hide_debugger();
     }
     
     _hide_debugger() {
         utils.addHtmlClass("debugger", "hidden");
         this.microbee.setSliceDoneCallback(null);
-        var button = document.getElementById("debugger_button");
+        var button = document.getElementById("debugger_button")!;
         utils.setTextContent(button, "Show Debugger");
-        button.onclick = utils.bind(this._show_debugger, this);
+        button.onclick = () => this._show_debugger();
     }
 };
 
@@ -306,7 +297,7 @@ window.onload = function () {
     try {
         Keyboard.init();
         var nw = new NanoWasp();
-        nw.main();
+        nw.start();
     } catch (e) {
         if (typeof(console) != "undefined" && console.log) {
             console.log(e);

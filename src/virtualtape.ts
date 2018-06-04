@@ -24,9 +24,11 @@
 import * as utils from './utils'
 import { DataBlock } from './utils'
 
+export type TapeParameters = [string, number, number, boolean, number];
+
 export class VirtualTape {
-    url: string;
-    data: DataBlock;
+    url: string|null = null;
+    data: DataBlock|null = null;
     title: string;
     filename: string;
     typeCode: string;
@@ -35,7 +37,7 @@ export class VirtualTape {
     isAutoStart: boolean;
     extra: number;
 
-    constructor(title, filename, urlOrData: string|DataBlock, tapeParameters) {
+    constructor(title: string, filename: string, urlOrData: string|DataBlock, tapeParameters?: TapeParameters) {
         if (typeof(urlOrData) == "string")
         {
             this.url = urlOrData;
@@ -55,7 +57,7 @@ export class VirtualTape {
         this.title = title;
         this.filename = filename;
         
-        if (tapeParameters == null) {
+        if (tapeParameters == undefined) {
             tapeParameters = VirtualTape.getDefaultParameters(filename);
         }
         
@@ -66,8 +68,8 @@ export class VirtualTape {
         this.extra = tapeParameters[4];
     };
 
-    static getDefaultParameters(filename) {
-        var tapeTypes = {
+    static getDefaultParameters(filename: string): TapeParameters {
+        var tapeTypes: { [extension: string]: TapeParameters } = {
             default_: ['B', 0x08C0, 0x0000, false, 0x00],
             bee: ['M', 0x0900, 0x0900, true, 0x00],
             bin: ['M', 0x0900, 0x0900, true, 0x00],
@@ -103,25 +105,26 @@ export class VirtualTape {
     //
     // Returns an XMLHttpRequest object which can be used to abort or check the status
     // of the request.
-    getFormattedData(onSuccess, onError): XMLHttpRequest {
+    getFormattedData(onSuccess: (data: DataBlock) => void, onError: (request: XMLHttpRequest) => void): XMLHttpRequest|null {
         if (this.data != null) {
             onSuccess(this._formatData());
-            return;
+            return null;
         }
         
-        var this_ = this;
         return utils.ajaxGetBinary(
-            this.url,
-            function (data) {
-                this_.data = data;
-                onSuccess(this_._formatData());
+            this.url!,
+            (data: DataBlock) => {
+                this.data = data;
+                onSuccess(this._formatData());
             },
-            function (request) {
-                onError(request);
-            })
+            onError);
     }
 
     _formatData() {
+        if (this.data == null) {
+            throw new Error("data is null");
+        }
+
         var headerLength = 40 + 1 + 16 + 1;
         var blockSize = 256;
         var fullBlockCount = Math.floor(this.data.length / blockSize);
@@ -180,14 +183,14 @@ export class VirtualTape {
         var dataStream = new utils.MemoryStream(this.data);
         for (var i = 0; i < fullBlockCount; ++i) {
             for (var j = 0; j < blockSize; ++j) {
-                stream.write(dataStream.read());
+                stream.write(dataStream.read()!);
             }
             stream.writeChecksum8();
         }
         
         if (finalBlockSize > 0) {
             for (var j = 0; j < finalBlockSize; ++j) {
-                stream.write(dataStream.read());
+                stream.write(dataStream.read()!);
             }
             stream.writeChecksum8();
         }

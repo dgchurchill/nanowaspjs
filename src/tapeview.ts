@@ -21,49 +21,44 @@ import { VirtualTape } from './virtualtape'
 
 
 interface Validator {
-    validate: (value: any) => any,
-    message?: string
+    validate: ((value: string) => number|undefined) | ((value: string) => string);
+    message?: string;
 }
 
 interface Field {
-    property: string,
-    label: string,
-    type?: string,
-    validator?: Validator,
-    renderer?: (value: any) => any
+    property: string;
+    label: string;
+    type?: string;
+    validator?: Validator;
+    renderer?: (value: string|number|boolean) => string;
 }
 
 export class TapeView {
     _tape: VirtualTape;
     _parentBlockElement: HTMLElement;
-    _form: HTMLFormElement;
+    _form: HTMLFormElement|null;
     _nameSpan: HTMLElement;
 
     constructor(tape: VirtualTape, parentBlockElement: HTMLElement, onTapeSelected: (tape: VirtualTape) => void, onTapeEdited: (tape: VirtualTape) => void) {
         this._tape = tape;
         this._parentBlockElement = parentBlockElement;
         this._form = null;
-        this._buildView(onTapeSelected, onTapeEdited);
-    };
 
-    _buildView(onTapeSelected, onTapeEdited) {
-        var this_ = this;  // For closures
-        
         this._nameSpan = document.createElement("span");
         this._nameSpan.className = "link";
-        this._nameSpan.onclick = function () {
-            onTapeSelected(this_._tape);
+        this._nameSpan.onclick = () => {
+            onTapeSelected(this._tape);
         };
         this._nameSpan.appendChild(document.createTextNode(this._tape.title));
         
         var editDiv = document.createElement("div");
         editDiv.className = "link right";
-        editDiv.onclick = function () {
-            if (this_._form == null) {
-                this_._insertForm(onTapeEdited);
+        editDiv.onclick = () => {
+            if (this._form == null) {
+                this._insertForm(onTapeEdited);
                 editDiv.innerHTML = "done";
             } else {
-                this_._removeForm();
+                this._removeForm();
                 editDiv.innerHTML = "edit";
             }
         };
@@ -73,14 +68,13 @@ export class TapeView {
         this._parentBlockElement.appendChild(this._nameSpan);
     }
         
-    _insertForm(onTapeEdited) {
-        var this_ = this;
-        var toHex = function (v) { return "0x" + v.toString(16); };
+    _insertForm(onTapeEdited: (tape: VirtualTape) => void) {
+        var toHex = (v: number) => "0x" + v.toString(16);
         
         var nameValidator: Validator = {
-            validate: function (v) {
-                this_._nameSpan.innerHTML = "";
-                this_._nameSpan.appendChild(document.createTextNode(v));
+            validate: (v) => {
+                this._nameSpan.innerHTML = "";
+                this._nameSpan.appendChild(document.createTextNode(v));
                 return v;
             }
         }
@@ -96,19 +90,19 @@ export class TapeView {
                 { property: 'isAutoStart', label: 'Auto started', type: 'checkbox' }
             ],
             2,
-            function () { onTapeEdited(this_._tape); });
+            () => { onTapeEdited(this._tape); });
 
         this._parentBlockElement.appendChild(this._form);
     }
     
     _removeForm() {
         if (this._form != null) {
-            this._form.parentNode.removeChild(this._form);
+            this._form.parentNode!.removeChild(this._form);
             this._form = null;
         }
     }
     
-    _integerValidator(min, max): Validator {
+    _integerValidator(min: number, max: number): Validator {
         return {
             validate: function (value: string) {
                 var base = null;
@@ -135,13 +129,12 @@ export class TapeView {
         };
     }
     
-    _createForm(data, fields: Field[], width, onChange): HTMLFormElement {
+    _createForm(data: VirtualTape, fields: any[], width: number|undefined, onChange: () => void): HTMLFormElement {
         var form = document.createElement('form');
-        var have_width = typeof(width) != 'undefined';
         var parent: HTMLElement = form;
         
         for (var i = 0; i < fields.length; ++i) {
-            if (have_width && i % width == 0) {
+            if (width !== undefined && i % width == 0) {
                 parent = document.createElement('p');
                 form.appendChild(parent);
             }
@@ -152,7 +145,7 @@ export class TapeView {
         return form;
     }
     
-    _createInput(data, field: Field, onChange) {
+    _createInput(data: any, field: Field, onChange: () => void) {
         var type = field.type;
         if (type == undefined) {
             type = 'text';
@@ -161,22 +154,14 @@ export class TapeView {
         var input_el = document.createElement('input');
         input_el.type = type;
         
-        var renderer = field.renderer;
-        if (renderer == undefined) {
-            renderer = function (v) { return v; };
-        }
+        let renderer: any = field.renderer || ((v: any) => v);
         if (type == 'checkbox') {
             input_el.checked = renderer(data[field.property]);
         } else {
             input_el.value = renderer(data[field.property]);
         }
         
-        var validator = field.validator;
-        if (validator == undefined) {
-            validator = {
-                validate: function (v) { return v; }
-            };
-        }
+        var validator: any = field.validator || { validate: (v: any) => v };
         input_el.onchange = function () {
             var new_value;
             if (type == 'checkbox') {

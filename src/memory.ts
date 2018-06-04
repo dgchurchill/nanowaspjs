@@ -17,12 +17,12 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { DataBlock, makeUint8Array } from './utils'
+import { DataBlock, makeUint8Array, BinaryReader } from './utils'
 
 export class Ram {
     _memory: DataBlock;
 
-    constructor(size) {
+    constructor(size: number) {
         this._memory = makeUint8Array(size);
     }
 
@@ -34,15 +34,15 @@ export class Ram {
         return this._memory.length;
     }
     
-    restoreState(state) {
+    restoreState(state: BinaryReader) {
         this._memory = state.readBuffer(this.getSize());
     }
         
-	read(address) {
+	read(address: number) {
 		return this._memory[address];
 	}
 
-	write(address, value) {
+	write(address: number, value: number) {
 		this._memory[address] = value;
     }
 }
@@ -50,7 +50,7 @@ export class Ram {
 export class Rom {
     _memory: DataBlock;
 
-    constructor(data) {
+    constructor(data: DataBlock) {
         this._memory = data;
     }
 
@@ -61,11 +61,11 @@ export class Rom {
         return this._memory.length;
     }
         
-	read(address) {
+	read(address: number) {
 		return this._memory[address];
 	}
 	
-	write(address, value) {
+	write(address: number, value: number) {
 		// no-op (writing to ROM)
     }
 }

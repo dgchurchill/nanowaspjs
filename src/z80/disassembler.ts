@@ -2,7 +2,7 @@
 import { opcodes } from './disassembler_dicts'
 import { Z80 } from './z80'
 
-export function hexString(n, length) {
+export function hexString(n: number, length: number) {
     var result = n.toString(16).toUpperCase();
     while (result.length < length) {
         result = '0' + result;
@@ -11,7 +11,7 @@ export function hexString(n, length) {
     return result + 'h';
 }
 
-export function disassemble(z80: Z80, address, count) {
+export function disassemble(z80: Z80, address: number, count: number) {
     var result = "";
     
     for (var i = 0; i < count; ++i)
@@ -21,7 +21,7 @@ export function disassemble(z80: Z80, address, count) {
             return result;
         }
         
-        var table = opcodes;
+        var table: any = opcodes;
         while (true) {
             var opcode = z80.readbyte_internal(address++);
             var entry = table[opcode];

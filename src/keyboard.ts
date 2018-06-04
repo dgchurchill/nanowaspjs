@@ -24,17 +24,18 @@ import { getBits } from './utils';
 
 export interface KeyboardContext {
     pressed: boolean[],
-    buffer: any[]
+    buffer: [number, boolean][]
 }
 
 export class Keyboard {
     _keyboardContext: KeyboardContext;
     _strictMode: boolean;
-    _microbee: MicroBee;
-    _crtc: Crtc;
-    _latchrom: LatchRom;
-    _lastBufferedKey = undefined;
-    _lastBufferedKeyTime: number;
+    _lastBufferedKey: number[]|null = null;
+    _lastBufferedKeyTime: number = 0;
+
+    _microbee!: MicroBee;
+    _crtc!: Crtc;
+    _latchrom!: LatchRom;
 
     constructor(keyboardContext: KeyboardContext) {
         this._keyboardContext = keyboardContext;
@@ -78,20 +79,20 @@ export class Keyboard {
         16     // Shift
     ];
 
-    static capturedKeys = {
+    static capturedKeys: { [keyCode: number]: number[] }  = {
         8: ['\b'.charCodeAt(0)],  // Backspace
         9: ['\t'.charCodeAt(0)],  // Tab
         13: ['\n'.charCodeAt(0)], // Enter
         27: ['\x1b'.charCodeAt(0)], // Escape
         32: [' '.charCodeAt(0)],  // Space
-        34: ['\r'], // PgDn
+        34: ['\r'.charCodeAt(0)], // PgDn
         35: ['\x18'.charCodeAt(0)], // End
         46: ['\x7f'.charCodeAt(0)],  // Delete
         191: ['/'.charCodeAt(0), '?'.charCodeAt(0)], // Firefox uses / and ' as shortcuts for quick search, 
         222: ["'".charCodeAt(0), '"'.charCodeAt(0)] // so have to capture them and their shifted versions here.
     };
 
-    static charactersToMicrobeeKeys = {};
+    static charactersToMicrobeeKeys: { [character: number]: number[] } = {};
 
     static init() {
         var toMicrobee = Keyboard.charactersToMicrobeeKeys;
@@ -115,20 +116,20 @@ export class Keyboard {
     static KEY_BITS = 6;
     static BUFFERED_KEY_RATE = 10000;
 
-    connect(microbee, crtc, latchrom) {
+    connect(microbee: MicroBee, crtc: Crtc, latchrom: LatchRom) {
         this._microbee = microbee;
         this._crtc = crtc;
         this._latchrom = latchrom;
     }
 
     reset() {
-        this._lastBufferedKey = undefined;
+        this._lastBufferedKey = null;
         this._lastBufferedKeyTime = 0;
         this._keyboardContext.pressed.length = 0;
         this._keyboardContext.buffer.length = 0;
     }
         
-    check(crtcAddress) {        
+    check(crtcAddress: number) {        
         var keyCode = getBits(crtcAddress, Keyboard.KEY_START, Keyboard.KEY_BITS);
         if (this._isPressed(keyCode)) {
             this._crtc.triggerLpen(crtcAddress);
@@ -149,12 +150,12 @@ export class Keyboard {
         }
     }
 
-    setStrictMode(enabled) {
+    setStrictMode(enabled: boolean) {
         this._strictMode = enabled;
         this.reset();
     }
 
-    _isPressed(microbeeCode) {
+    _isPressed(microbeeCode: number) {
         if (this._strictMode) {
             this._keyboardContext.buffer.length = 0;
             return this._keyboardContext.pressed[Keyboard.microbeeToJavascriptKeyMap[microbeeCode]]
@@ -162,20 +163,21 @@ export class Keyboard {
             if (this._microbee.getTime() > this._lastBufferedKeyTime + Keyboard.BUFFERED_KEY_RATE) {
                 this._lastBufferedKeyTime = this._microbee.getTime();
 
-                if (this._lastBufferedKey == undefined) {
-                    var keyEvent = this._keyboardContext.buffer.shift();
+                if (this._lastBufferedKey == null) {
+                    let keyEvent = this._keyboardContext.buffer.shift();
                     if (keyEvent != undefined) {
-                        this._lastBufferedKey = Keyboard.charactersToMicrobeeKeys[keyEvent[0]];
-                        if (keyEvent[1]) {
+                        let [character, ctrlPressed] = keyEvent;
+                        this._lastBufferedKey = Keyboard.charactersToMicrobeeKeys[character];
+                        if (ctrlPressed) {
                             this._lastBufferedKey.push(57);  // microbee ctrl key code
                         }
                     }
                 } else {
-                    this._lastBufferedKey = undefined; // simulate key release
+                    this._lastBufferedKey = null; // simulate key release
                 }
             }
 
-            return this._lastBufferedKey != undefined && this._lastBufferedKey.indexOf(microbeeCode) >= 0;
+            return this._lastBufferedKey != null && this._lastBufferedKey.indexOf(microbeeCode) >= 0;
         }
     }
 }

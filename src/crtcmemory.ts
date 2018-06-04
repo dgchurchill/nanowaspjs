@@ -20,7 +20,25 @@
 import { Rom, Ram } from './memory'
 import { Crtc } from './crtc'
 import { LatchRom } from './latchrom'
-import { getBit, getBits } from './utils'
+import { getBit, getBits, DataBlock, BinaryReader } from './utils'
+
+interface CharacterImageCache {
+    [character: number]: ImageData;
+}
+
+export const CHAR_WIDTH = 8;
+export const BACKGROUND_COLOR_CSS = "rgba(0; 0, 0, 0)";
+
+const GRAPHICS_MEMORY_SIZE = 4096;
+const VIDEO_RAM_SIZE = 2048;
+const PCG_RAM_SIZE = 2048;
+const BIT_MA13 = 13;
+const MAX_CHAR_HEIGHT = 16;
+const FOREGROUND_COLOR = [247, 211, 49, 220];
+const BACKGROUND_COLOR = [0, 0, 0, 0];
+const BIT_PCG = 7;
+const INDEX_START = 0;
+const INDEX_COUNT = 7;
 
 export class CrtcMemory {
     _charRom: Rom;
@@ -29,19 +47,19 @@ export class CrtcMemory {
 
     _graphicsContext: CanvasRenderingContext2D;
     
-    _pcgImages: { [character: number]: ImageData };
-    _charRomImages: { [character: number]: ImageData };
+    _pcgImages: CharacterImageCache;
+    _charRomImages: CharacterImageCache;
 
-    _crtc: Crtc;
-    _latchRom: LatchRom;
+    _crtc!: Crtc;
+    _latchRom!: LatchRom;
 
     _dirtyVideoRam: { [address: number] : boolean };
     _dirtyPcgImages: { [address: number] : boolean };
 
-    constructor(charRomData, graphicsContext) {
+    constructor(charRomData: DataBlock, graphicsContext: CanvasRenderingContext2D) {
         this._charRom = new Rom(charRomData);
-        this._pcgRam = new Ram(CrtcMemory.PCG_RAM_SIZE);
-        this._videoRam = new Ram(CrtcMemory.VIDEO_RAM_SIZE);
+        this._pcgRam = new Ram(PCG_RAM_SIZE);
+        this._videoRam = new Ram(VIDEO_RAM_SIZE);
 
         this._graphicsContext = graphicsContext;
         
@@ -49,22 +67,10 @@ export class CrtcMemory {
         this._charRomImages = {};
         this._buildAllCharacters(this._charRomImages, this._charRom);
         
+        this._dirtyVideoRam = {};
+        this._dirtyPcgImages = {};
         this.clearDirtyStatus();
     }
-
-    static GRAPHICS_MEMORY_SIZE = 4096;
-    static VIDEO_RAM_SIZE = 2048;
-    static PCG_RAM_SIZE = 2048;
-    static BIT_MA13 = 13;
-    static CHAR_WIDTH = 8;
-    static MAX_CHAR_HEIGHT = 16;
-    static FOREGROUND_COLOR = [247, 211, 49, 220];
-    static BACKGROUND_COLOR = [0, 0, 0, 0];
-    static BACKGROUND_COLOR_CSS = "rgba(0; 0, 0, 0)";
-    static BIT_PCG = 7;
-    static INDEX_START = 0;
-    static INDEX_COUNT = 7;
-
 
     reset() {
         this._charRom.reset();
@@ -72,46 +78,46 @@ export class CrtcMemory {
         this._videoRam.reset();
     }
     
-    restoreState(state) {
+    restoreState(state: BinaryReader) {
         this._videoRam.restoreState(state);
         this._pcgRam.restoreState(state);
         this._buildAllCharacters(this._pcgImages, this._pcgRam);
     }
     
-    connect(crtc, latchRom) {
+    connect(crtc: Crtc, latchRom: LatchRom) {
         this._crtc = crtc;
         this._latchRom = latchRom;
     }
     
     getSize() {
-        return CrtcMemory.GRAPHICS_MEMORY_SIZE;
+        return GRAPHICS_MEMORY_SIZE;
     }
     
-    read(address) {
-        if (address < CrtcMemory.VIDEO_RAM_SIZE) {
+    read(address: number) {
+        if (address < VIDEO_RAM_SIZE) {
             if (this._latchRom.isLatched()) {
-                var baseAddress = getBit(this._crtc.getDisplayStart(), CrtcMemory.BIT_MA13) * CrtcMemory.VIDEO_RAM_SIZE;
+                var baseAddress = getBit(this._crtc.getDisplayStart(), BIT_MA13) * VIDEO_RAM_SIZE;
                 return this._charRom.read(baseAddress + address);
             } else {
                 return this._videoRam.read(address);
             }
         } else {
-            return this._pcgRam.read((address - CrtcMemory.VIDEO_RAM_SIZE) % CrtcMemory.PCG_RAM_SIZE);
+            return this._pcgRam.read((address - VIDEO_RAM_SIZE) % PCG_RAM_SIZE);
         }
     }
     
-    write(address, value) {
-        if (address < CrtcMemory.VIDEO_RAM_SIZE) {
+    write(address: number, value: number) {
+        if (address < VIDEO_RAM_SIZE) {
             if (!this._latchRom.isLatched()) {
                 this._videoRam.write(address, value);
                 this._dirtyVideoRam[address] = true;  // Assume the new value is different.
             }
         }
         else {
-            var pcgAddress = (address - CrtcMemory.VIDEO_RAM_SIZE) % CrtcMemory.PCG_RAM_SIZE;
+            var pcgAddress = (address - VIDEO_RAM_SIZE) % PCG_RAM_SIZE;
             this._pcgRam.write(pcgAddress, value);
-            var character = pcgAddress / CrtcMemory.MAX_CHAR_HEIGHT | 0;
-            var row = pcgAddress % CrtcMemory.MAX_CHAR_HEIGHT;
+            var character = pcgAddress / MAX_CHAR_HEIGHT | 0;
+            var row = pcgAddress % MAX_CHAR_HEIGHT;
             this._pcgImages[character] = this._buildCharacterRow(this._pcgImages[character], value, row);
             this._dirtyPcgImages[character] = true;
         }
@@ -121,19 +127,19 @@ export class CrtcMemory {
      * 
      * The character data is dirty if the character in video memory or its corresponding bitmap data has changed.
      */
-    isDirty(crtcAddress) {
-        var videoAddress = crtcAddress % CrtcMemory.VIDEO_RAM_SIZE;
+    isDirty(crtcAddress: number) {
+        var videoAddress = crtcAddress % VIDEO_RAM_SIZE;
         if (videoAddress in this._dirtyVideoRam) {
             return true;
         }
         
-        var b = this._videoRam.read(crtcAddress % CrtcMemory.VIDEO_RAM_SIZE);
-        var isPcg = getBit(b, CrtcMemory.BIT_PCG) == 1;
+        var b = this._videoRam.read(crtcAddress % VIDEO_RAM_SIZE);
+        var isPcg = getBit(b, BIT_PCG) == 1;
         if (!isPcg) {
             return false;  // ROM-based bitmaps cannot change.
         }
         
-        var character = getBits(b, CrtcMemory.INDEX_START, CrtcMemory.INDEX_COUNT);
+        var character = getBits(b, INDEX_START, INDEX_COUNT);
         return character in this._dirtyPcgImages;
     }
     
@@ -142,55 +148,53 @@ export class CrtcMemory {
         this._dirtyPcgImages = {};
     }
     
-    getCharacterData(crtcAddress, scansPerRow, cursor) {
-        var b = this._videoRam.read(crtcAddress % CrtcMemory.VIDEO_RAM_SIZE);
-        var character = getBits(b, CrtcMemory.INDEX_START, CrtcMemory.INDEX_COUNT);
-        var isPcg = getBit(b, CrtcMemory.BIT_PCG) == 1;
+    getCharacterData(crtcAddress: number, scansPerRow: number, cursor: [number, number]|null) {
+        var b = this._videoRam.read(crtcAddress % VIDEO_RAM_SIZE);
+        var character = getBits(b, INDEX_START, INDEX_COUNT);
+        var isPcg = getBit(b, BIT_PCG) == 1;
         
         if (!isPcg) {
             // Select character ROM bank
-            character += getBit(crtcAddress, CrtcMemory.BIT_MA13) * CrtcMemory.VIDEO_RAM_SIZE / CrtcMemory.MAX_CHAR_HEIGHT;
+            character += getBit(crtcAddress, BIT_MA13) * VIDEO_RAM_SIZE / MAX_CHAR_HEIGHT;
         }
         
-        if (cursor == null || cursor == undefined) {
+        if (cursor == null) {
             var imageCache = isPcg ? this._pcgImages : this._charRomImages;
             return imageCache[character];
         } else {
             var memory = isPcg ? this._pcgRam : this._charRom;
-            return this._buildCharacter(null, memory, character * CrtcMemory.MAX_CHAR_HEIGHT, cursor);
+            return this._buildCharacter(null, memory, character * MAX_CHAR_HEIGHT, cursor);
         }
     }
     
-    _buildAllCharacters(cache, memory) {
-        for (var i = 0; i < memory.getSize() / CrtcMemory.MAX_CHAR_HEIGHT; ++i) {
-            cache[i] = this._buildCharacter(cache[i], memory, i * CrtcMemory.MAX_CHAR_HEIGHT);
+    _buildAllCharacters(cache: CharacterImageCache, memory: Rom) {
+        for (var i = 0; i < memory.getSize() / MAX_CHAR_HEIGHT; ++i) {
+            cache[i] = this._buildCharacter(cache[i], memory, i * MAX_CHAR_HEIGHT, null);
         }
     }
     
-    _buildCharacter(image, memory, offset, cursor?) {
-        var haveCursor = cursor != null && cursor != undefined;
-        
-        for (var i = 0; i < CrtcMemory.MAX_CHAR_HEIGHT; ++i) {
+    _buildCharacter(image: ImageData|null, memory: Rom, offset: number, cursor: [number, number]|null): ImageData {
+        for (var i = 0; i < MAX_CHAR_HEIGHT; ++i) {
             var data = memory.read(offset + i);
             
-            if (haveCursor && i >= cursor[0] && i <= cursor[1]) {
+            if (cursor != null && i >= cursor[0] && i <= cursor[1]) {
                 data ^= 0xff;
             }
             
             image = this._buildCharacterRow(image, data, i);
         }
         
-        return image;
+        return image!;
     }
     
-    _buildCharacterRow(image: ImageData, data: number, row: number): ImageData {
-        if (image == null || image == undefined) {
-            image = this._graphicsContext.createImageData(CrtcMemory.CHAR_WIDTH, CrtcMemory.MAX_CHAR_HEIGHT);
+    _buildCharacterRow(image: ImageData|null, data: number, row: number): ImageData {
+        if (image == null) {
+            image = this._graphicsContext.createImageData(CHAR_WIDTH, MAX_CHAR_HEIGHT);
         }
         
-        var imageOffset = row * CrtcMemory.CHAR_WIDTH * 4;
-        for (var i = CrtcMemory.CHAR_WIDTH - 1; i >= 0; --i) {
-            var color = ((data & (1 << i)) != 0) ? CrtcMemory.FOREGROUND_COLOR : CrtcMemory.BACKGROUND_COLOR;
+        var imageOffset = row * CHAR_WIDTH * 4;
+        for (var i = CHAR_WIDTH - 1; i >= 0; --i) {
+            var color = ((data & (1 << i)) != 0) ? FOREGROUND_COLOR : BACKGROUND_COLOR;
             for (var j = 0; j < color.length; ++j) {
                 image.data[imageOffset++] = color[j];
             }

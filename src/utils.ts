@@ -19,26 +19,26 @@
 
 // Bit manipulation functions
 
-export function getBit(value, bit) {
+export function getBit(value: number, bit: number) {
     return (value >> bit) & 1;
 }
 
-export function getBits (value, start, count) {
+export function getBits(value: number, start: number, count: number) {
     return (value >> start) % (1 << count);
 }
 
-export function clearBits (value, start, count) {
+export function clearBits(value: number, start: number, count: number) {
     return value & ~(((1 << count) - 1) << start);
 }
 
-export function copyBits (old, start, count, value) {
+export function copyBits(old: number, start: number, count: number, value: number) {
     return clearBits(old, start, count) | (getBits(value, 0, count) << start);
 }
 
 
 // Basic DOM stuff
-export function addHtmlClass (elementId, className) {
-    var element = document.getElementById(elementId);
+export function addHtmlClass(elementId: string, className: string) {
+    var element = document.getElementById(elementId)!;
     var classes = element.className.split(/\s+/);
     for (var i = 0; i < classes.length; ++i) {
         if (classes[i] == className) {
@@ -49,8 +49,8 @@ export function addHtmlClass (elementId, className) {
     element.className = classes.join(" ");
 }
 
-export function removeHtmlClass (elementId, className) {
-    var element = document.getElementById(elementId);
+export function removeHtmlClass(elementId: string, className: string) {
+    var element = document.getElementById(elementId)!;
     var classes = element.className.split(/\s+/);
     var newClasses = [];
     for (var i = 0; i < classes.length; ++i) {
@@ -63,8 +63,8 @@ export function removeHtmlClass (elementId, className) {
 
 // Removes the 'className' class from 'elementId' if it currently contains it and vice-versa.
 // Returns true if the class is now enabled or false otherwise.
-export function toggleHtmlClass (elementId, className) {
-    var element = document.getElementById(elementId);
+export function toggleHtmlClass (elementId: string, className: string) {
+    var element = document.getElementById(elementId)!;
     var classes = element.className.split(/\s+/);
     var newClasses = [];
     var wasActive = false;
@@ -83,17 +83,12 @@ export function toggleHtmlClass (elementId, className) {
     return !wasActive;
 }
 
-export function setTextContent (element, text) {
+export function setTextContent (element: HTMLElement, text: string) {
     element.innerHTML = "";
     element.appendChild(document.createTextNode(text));
 }
 
 // Missing feature implementation
-
-export let bind =
-    (function () {}).bind == undefined
-    ? function (func, target) { return function () { func.apply(target, arguments); }; }
-    : function (func, target) { return func.bind(target); };
 
 export interface DataBlock {
     [index: number]: number;
@@ -110,7 +105,7 @@ export let makeUint8Array: (size: number) => DataBlock =
     
 export function decodeBase64 (s: string) {
     var encode = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    var decode = {};
+    var decode: { [char: string]: number } = {};
     for (var i = 0; i < encode.length; ++i) {
         decode[encode.charAt(i)] = i;
     }
@@ -171,7 +166,7 @@ export function decodeBase64 (s: string) {
 
 // XMLHttpRequest
 
-export function ajaxGetBinary (url, onSuccess, onError) {
+export function ajaxGetBinary (url: string, onSuccess: (data: DataBlock) => void, onError: (request: XMLHttpRequest) => void) {
     var request = new XMLHttpRequest();
     request.open('GET', url, true);
 
@@ -182,17 +177,21 @@ export function ajaxGetBinary (url, onSuccess, onError) {
     request.onreadystatechange = function () {
         if (request.readyState == 4) {  
             if (request.status == 200) {
-                var response, getByte;
-                if (typeof(request['responseBody']) != "undefined") {
-                    response = new VBArray(request['responseBody']).toArray();
-                    getByte = function (i) { return response[i]; };
+                var getByte;
+                var length;
+
+                if (typeof((request as any)['responseBody']) != "undefined") {
+                    let response = new VBArray((request as any)['responseBody']).toArray();
+                    length = response.length;
+                    getByte = (i: number) => response[i];
                 } else {
-                    response = request.responseText;
-                    getByte = function (i) { return response.charCodeAt(i) & 0xff; };
+                    let response = request.responseText;
+                    length = response.length;
+                    getByte = (i: number) => response.charCodeAt(i) & 0xff;
                 }
 
-                var buffer = makeUint8Array(response.length);
-                for (var i = 0; i < response.length; ++i) {
+                var buffer = makeUint8Array(length);
+                for (var i = 0; i < length; ++i) {
                     buffer[i] = getByte(i);
                 }
 
@@ -210,7 +209,7 @@ export function ajaxGetBinary (url, onSuccess, onError) {
 
 // Other
 
-export function listsMatch (l1, l2) {
+export function listsMatch<T>(l1: T[], l2: T[]) {
     if (l1.length != l2.length) {
         return false;
     }
@@ -224,7 +223,7 @@ export function listsMatch (l1, l2) {
     return true;
 }
 
-export function trimRight (str) {
+export function trimRight(str: string) {
     return str.replace(/\s+$/, '');
 }
 
@@ -251,7 +250,7 @@ export class BinaryReader {
         return this.readByte() != 0;
     }
 
-    readBuffer(length) {
+    readBuffer(length: number) {
         var buffer = makeUint8Array(length);
         for (var i = 0; i < length; ++i) {
             buffer[i] = this.readByte();
@@ -262,17 +261,17 @@ export class BinaryReader {
 }
 
 export class MemoryStream {
-    _array: Uint8Array;
+    _array: DataBlock;
     _offset: number;
     _checksum8: number;
 
-    constructor(array) {
+    constructor(array: DataBlock) {
         this._array = array;
         this._offset = 0;
         this._checksum8 = 0;
     }
 
-    write(b) {
+    write(b: number) {
         this._array[this._offset++] = b;
         this._checksum8 = ((256 + b - this._checksum8) & 0xFF) ^ 0xFF;
     }

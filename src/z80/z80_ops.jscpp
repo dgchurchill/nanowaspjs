@@ -22,24 +22,24 @@
 
 #define HAVE_ENOUGH_MEMORY
 
-function sign_extend(v) {
+function sign_extend(v: number) {
   return v < 128 ? v : v-256;
 }
 
-export function z80_set_breakpoint(z80, location, handler) {
+export function z80_set_breakpoint(z80: Z80, location: number, handler: () => void) {
     z80.breakpoints[location] = handler;
 }
 
-export function z80_clear_breakpoints(z80) {
+export function z80_clear_breakpoints(z80: Z80) {
     z80.breakpoints = {};
 }
 
-export function z80_ret(z80) {
+export function z80_ret(z80: Z80) {
     RET();
 }
 
 /* Execute Z80 opcodes until the next event */
-export function z80_do_opcodes(z80, event_next_event)
+export function z80_do_opcodes(z80: Z80, event_next_event: number)
 {
 
   while(z80.tstates < event_next_event ) {

@@ -25,9 +25,9 @@ export class Debugger {
     _z80: Z80;
     _registersElement: HTMLElement;
 
-    constructor(z80: Z80, registersElementName: string) {
+    constructor(z80: Z80, registersElement: HTMLElement) {
         this._z80 = z80;
-        this._registersElement = document.getElementById(registersElementName);
+        this._registersElement = registersElement;
     }
 
     update() {
@@ -44,7 +44,7 @@ export class Debugger {
             disassemble(this._z80, this._z80.pc, 5));
     }
     
-    _formatHex(data, length) {
+    _formatHex(data: number, length: number) {
         var result = data.toString(16).toUpperCase();
         while (result.length < length) {
             result = "0" + result;

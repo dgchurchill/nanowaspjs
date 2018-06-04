@@ -17,10 +17,9 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import * as utils from './utils'
 import { VirtualTape } from './virtualtape'
 import { Z80Cpu } from './z80cpu';
-import { Keyboard } from './keyboard';
+import { Keyboard, KeyboardContext } from './keyboard';
 import { LatchRom } from './latchrom';
 import { Crtc } from './crtc';
 import { MemMapper } from './memmapper';
@@ -28,40 +27,69 @@ import { Rom, Ram } from './memory';
 import { CrtcMemory } from './crtcmemory';
 import { TapeInjector } from './tapeinjector';
 import data from './data';
+import { decodeBase64, makeUint8Array, BinaryReader, DataBlock } from './utils';
+
+interface Runnable {
+    execute: (emulationTime: number, microsToRun: number) => number;
+    getCurrentExecutionTime?: () => number;
+}
+
+const MAX_MICROS_TO_RUN = 200000;
 
 export class MicroBee {
     _isRunning: boolean = false;
-    _sliceDoneCallback: () => void = null;
-    _devices: any;
-    _runnables: any;
-    _runningDevice: any;
-    _emulationTime: number;
-    _microsToRun: number;
-    _startRealTime: number;
-    _startEmulationTime: number;
+    _sliceDoneCallback: (() => void)|null = null;
 
-    currentTape: any;
+    _devices: {
+        z80: Z80Cpu;
+        keyboard: Keyboard;
+        latchrom: LatchRom;
+        crtc: Crtc;
+        memMapper: MemMapper;
+        rom1: Rom;
+        rom2: Rom;
+        rom3: Rom;
+        ram0: Ram;
+        ram1: Ram;
+        ram2: Ram;
+        ram3: Ram;
+        crtcMemory: CrtcMemory;
+        tapeInjector: TapeInjector;
 
-    static MAX_MICROS_TO_RUN = 200000;
+        [name: string]: {
+            reset: () => void;
+            restoreState?: (state: BinaryReader) => void;
+        };
+    };
 
+    _runnables: Runnable[];
+    _runningDevice: Runnable|null;
+    _emulationTime: number = 0;
+    _microsToRun: number = 0;
+    _startRealTime: number = 0;
+    _startEmulationTime: number = 0;
 
-    constructor(graphicsContext: CanvasRenderingContext2D, keyboardContext) {
+    currentTape: VirtualTape|null;
+
+    constructor(graphicsContext: CanvasRenderingContext2D, keyboardContext: KeyboardContext) {
         // Create the devices
-        this._devices = {};
-        this._devices.z80 = new Z80Cpu();
-        this._devices.keyboard = new Keyboard(keyboardContext);
-        this._devices.latchrom = new LatchRom();
-        this._devices.crtc = new Crtc(graphicsContext);
-        this._devices.memMapper = new MemMapper();
-        this._devices.rom1 = new Rom(utils.decodeBase64(data.roms.basic_5_22e));
-        this._devices.rom2 = new Rom(utils.makeUint8Array(16384));
-        this._devices.rom3 = new Rom(utils.makeUint8Array(16384));
-        this._devices.ram0 = new Ram(32768);
-        this._devices.ram1 = new Ram(32768);
-        this._devices.ram2 = new Ram(32768);
-        this._devices.ram3 = new Ram(32768);
-        this._devices.crtcMemory = new CrtcMemory(utils.decodeBase64(data.roms["char"]), graphicsContext);
-        this._devices.tapeInjector = new TapeInjector(this._devices.z80);
+        let z80 = new Z80Cpu();
+        this._devices = {
+            z80: z80,
+            keyboard: new Keyboard(keyboardContext),
+            latchrom: new LatchRom(),
+            crtc: new Crtc(graphicsContext),
+            memMapper: new MemMapper(),
+            rom1: new Rom(decodeBase64(data.roms.basic_5_22e)),
+            rom2: new Rom(makeUint8Array(16384)),
+            rom3: new Rom(makeUint8Array(16384)),
+            ram0: new Ram(32768),
+            ram1: new Ram(32768),
+            ram2: new Ram(32768),
+            ram3: new Ram(32768),
+            crtcMemory: new CrtcMemory(decodeBase64(data.roms["char"]), graphicsContext),
+            tapeInjector: new TapeInjector(z80)
+        };
         
         this._runnables = [this._devices.z80, this._devices.crtc];
         this._runningDevice = null;
@@ -104,22 +132,22 @@ export class MicroBee {
         //       to initialise the CRTC then everything is OK.  If we start running slices of only 1us
         //       duration then everything slows to a crawl.  TODO: Fix this properly (e.g. ensure CRTC never
         //       returns too small an interval; or, implement a MIN_MICROS_TO_RUN).
-        this._microsToRun = MicroBee.MAX_MICROS_TO_RUN;
+        this._microsToRun = MAX_MICROS_TO_RUN;
     }
 
-    restoreState(state) {
+    restoreState(state: { [name: string]: string }) {
         for (var key in state) {
-            var reader = new utils.BinaryReader(utils.decodeBase64(state[key]));
-            this._devices[key].restoreState(reader);
+            var reader = new BinaryReader(decodeBase64(state[key]));
+            this._devices[key].restoreState!(reader);
         }
     }
     
-    setSliceDoneCallback(cb) {
+    setSliceDoneCallback(cb: (() => void)|null) {
         this._sliceDoneCallback = cb;
     }
     
     _runSlice() {
-        var nextMicros = MicroBee.MAX_MICROS_TO_RUN;
+        var nextMicros = MAX_MICROS_TO_RUN;
         
         for (var i in this._runnables) {
             this._runningDevice = this._runnables[i];
@@ -148,7 +176,7 @@ export class MicroBee {
     
     getTime() {
         if (this._runningDevice != null) {
-            return this._emulationTime + this._runningDevice.getCurrentExecutionTime();
+            return this._emulationTime + this._runningDevice.getCurrentExecutionTime!();
         }
         
         return this._emulationTime;
@@ -171,20 +199,19 @@ export class MicroBee {
         return this._isRunning;
     }
     
-    loadTape(tape: VirtualTape, onSuccess, onError) {
-        var this_ = this;
+    loadTape(tape: VirtualTape, onSuccess: (tape: VirtualTape) => void, onError: (tape: VirtualTape, request: XMLHttpRequest) => void) {
         return tape.getFormattedData(
-            function (data) {
-                this_._devices.tapeInjector.setData(data);
-                this_.currentTape = tape;
+            (data: DataBlock) => {
+                this._devices.tapeInjector.setData(data);
+                this.currentTape = tape;
                 onSuccess(tape);
             },
-            function (request) {
+            (request: XMLHttpRequest) => {
                 onError(tape, request);
             });
     }
 
-    setKeyboardStrictMode(enabled) {
+    setKeyboardStrictMode(enabled: boolean) {
         this._devices.keyboard.setStrictMode(enabled);
     }
 };

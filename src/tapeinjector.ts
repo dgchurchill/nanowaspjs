@@ -25,20 +25,38 @@ import { Z80Cpu } from "./z80cpu";
 import { DataBlock, trimRight } from "./utils";
 import { saveAs } from 'file-saver';
 
+interface Header {
+    name: string;
+    type: string;
+    length: number;
+    skip: number;
+}
+
+interface Parser<T> {
+    init: T;
+    update: (state: T, byte: number) => T;
+}
+
+type HeaderFormatEntry<K extends keyof Header> = {
+    name: K;
+    length: number;
+    parser: Parser<Header[K]>
+}
+
 export class TapeInjector {
     _z80cpu: Z80Cpu;
     _data: DataBlock;
     _offset: number;
-    _write_state: any[];
-    _write_header: any;
-    _write_data: number[];
+    _write_state: { state: "find_header"; one: number } | { state: "header"; element: number; offset: number } | { state: "data"; one: number };
+    _write_header: Partial<Header> = {};
+    _write_data: number[] = [];
 
-    constructor(z80cpu) {
+    constructor(z80cpu: Z80Cpu) {
         this._z80cpu = z80cpu;
         this._data = [];
         this._offset = 0;
 
-        this._write_state = ['find_header', 0];
+        this._write_state = { state: 'find_header', one: 0 };
     }
 
     static READ_LOCATION = 0xAB6D;
@@ -72,71 +90,82 @@ export class TapeInjector {
 
         // TODO: Merge this parser in with the serializer in VirtualTape, and share the type detection.
 
-        var string_t = ['', function (a, n) { return a + String.fromCharCode(n); }];
-        var int_t = [0, function (a, n) { return a / 256 + 256 * n; }];  // Er, well it works for 2 bytes :D
-        var null_t = [0, function (a, n) { return 0; }];
+        var string_t: Parser<string> = { init: '', update: function (a: string, n: number) { return a + String.fromCharCode(n); } };
+        var int_t: Parser<number> = { init: 0, update: function (a: number, n: number) { return a / 256 + 256 * n; } };  // Er, well it works for 2 bytes :D
+        var null_t: Parser<number> = { init: 0, update: function (a: number, n: number) { return 0; } };
 
-        var header = [
-            ['name', 6, string_t],
-            ['type', 1, string_t],
-            ['length', 2, int_t],
-            ['skip', 8, null_t]
-        ];
+        let hfe1: HeaderFormatEntry<"name"> = { name: "name", length: 6, parser: string_t };
+        let hfe2: HeaderFormatEntry<"type"> ={ name: 'type', length: 1, parser: string_t };
+        let hfe3: HeaderFormatEntry<"length"> ={ name: 'length', length: 2, parser: int_t };
+        let hfe4: HeaderFormatEntry<"skip"> ={ name: 'skip', length: 8, parser: null_t };
+        let headerFormat = [ hfe1, hfe2, hfe3, hfe4];
 
         var blockSize = 256;
 
-        switch (this._write_state[0]) {
+        switch (this._write_state.state) {
             case 'find_header':
-                if (value == this._write_state[1]) {
-                    switch (this._write_state[1]) {
+                if (value == this._write_state.one) {
+                    switch (this._write_state.one) {
                         case 0:
-                            this._write_state[1] = 1;
+                            this._write_state.one = 1;
                             break;
 
                         case 1:
-                            this._write_state = ['header', 0, 0];
+                            this._write_state = { state: 'header', element: 0, offset: 0 };
                             this._write_header = {};
                     }
                 }
                 break;
 
             case 'header':
-                var entry: any = header[this._write_state[1]];
+                var entry = headerFormat[this._write_state.element];
 
-                if (this._write_state[2] == 0) {
-                    this._write_header[entry[0]] = entry[2][0];
+                if (this._write_state.offset == 0) {
+                    this._write_header[entry.name] = entry.parser.init;
                 }
 
-                this._write_header[entry[0]] = entry[2][1](this._write_header[entry[0]], value);
-                this._write_state[2] += 1;
+                // TODO: Work out how to get TypeScript to accept the below without the switch
+                switch (entry.name) {
+                    case "name":
+                    case "type":
+                        this._write_header[entry.name] = entry.parser.update(this._write_header[entry.name]!, value);
+                        break;
 
-                if (this._write_state[2] == entry[1]) {
-                    this._write_state[1] += 1;
-                    this._write_state[2] = 0;
+                    case "length":
+                    case "skip":
+                        this._write_header[entry.name] = entry.parser.update(this._write_header[entry.name]!, value);
+                        break;
+                }
 
-                    if (this._write_state[1] == header.length) {
-                        this._write_state = ['data', 0];
+                this._write_state.offset += 1;
+
+                if (this._write_state.offset == entry.length) {
+                    this._write_state.element += 1;
+                    this._write_state.offset = 0;
+
+                    if (this._write_state.element == headerFormat.length) {
+                        this._write_state = { state: 'data', one: 0 };
                         this._write_data = [];
                     }
                 }
                 break;
 
             case 'data':
-                if (this._write_state[1] == blockSize) {
+                if (this._write_state.one == blockSize) {
                     // Checksum, ignore
-                    this._write_state[1] = 0;
+                    this._write_state.one = 0;
                 } else {
                     this._write_data.push(value);
-                    this._write_state[1] += 1;
+                    this._write_state.one += 1;
                 }
 
-                if (this._write_data.length == this._write_header['length']) {
+                if (this._write_data.length == this._write_header.length) {
                     console.log('Got file ' + this._write_header.name + ' of type ' + this._write_header.type + ' with length ' + this._write_header.length);
                     var blob = new Blob([new Uint8Array(this._write_data)], {type: 'application/octet-binary'});
-                    saveAs(blob, trimRight(this._write_header.name) + (this._write_header.type == 'M' ? '.bin' : '.mwb'));
+                    saveAs(blob, trimRight(this._write_header.name!) + (this._write_header.type == 'M' ? '.bin' : '.mwb'));
                     
                     // There'll be one more checksum byte, but the find_header state will ignore it.
-                    this._write_state = ['find_header', 0];
+                    this._write_state = { state: 'find_header', one: 0 };
                 }
                 break;
         }

@@ -635,7 +635,7 @@ sub opcode_EXX (@) {
 EXX
 }
 
-sub opcode_HALT (@) { print "      z80.halted=1;\n      PC--;PC &= 0xffff;\n"; }
+sub opcode_HALT (@) { print "      z80.halted=true;\n      PC--;PC &= 0xffff;\n"; }
 
 sub opcode_IM (@) {
 
@@ -663,7 +663,7 @@ IN
 	print << "IN";
       z80.tstates += 1;
       {
-	let bytetemp;
+	let bytetemp: number = 0;
 	IN(bytetemp,BCR);
       }
 IN

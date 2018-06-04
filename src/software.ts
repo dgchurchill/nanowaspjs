@@ -17,7 +17,17 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-export var software = [
+import { TapeParameters } from "./virtualtape";
+
+interface Software {
+    title: string;
+    author?: string;
+    url: string;
+    filename: string;
+    tapeParameters?: TapeParameters;
+}
+
+export var software: Software[] = [
     {
         title: "Camel Race",
         url: "software/camel.mwb",
