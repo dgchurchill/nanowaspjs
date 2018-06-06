@@ -19,7 +19,7 @@ updateDate = now.toLocaleDateString('en-AU', { year: 'numeric', month: 'long', d
 module.exports = {
     entry: './src/nanowasp.ts',
     output: {
-      filename: 'bundle.js',
+      filename: `bundle-${version}.js`,
       path: path.resolve(__dirname, 'dist')
     },
     resolve: {

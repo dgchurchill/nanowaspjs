@@ -2,5 +2,5 @@
 .DS_Store
 node_modules/
 dist/software/
-dist/bundle.js
+dist/bundle*.js
 dist/index.html
